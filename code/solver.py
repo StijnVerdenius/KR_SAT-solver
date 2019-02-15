@@ -22,8 +22,6 @@ class Solver:
         solved = False
 
 
-
-
         while (not solved):
 
             # get next element from stack
@@ -57,13 +55,14 @@ class Solver:
                 for future_state in self.possible_moves(current_state):
                     stack.append(future_state)
 
-    def possible_moves(self, current_state):
+    def possible_moves(self, current_state : KnowledgeBase) -> list:
 
         output = []
 
         for literal in current_state.literal_set:
-            if (literal not in current_state.current_truth_values):
-                new_state = deepcopy(current_state)
-                new_state.current_truth_values[literal] = choice([True, False])
-                output.append(new_state)
+            for choice in [True, False]:
+                if (literal not in current_state.current_truth_values):
+                    new_state = deepcopy(current_state)
+                    new_state.set_literal(literal, choice)
+                    output.append(new_state)
         return output
