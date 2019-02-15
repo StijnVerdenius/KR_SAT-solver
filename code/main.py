@@ -27,7 +27,7 @@ def main(program_version: int, dimacs_file_path: str):
     knowledge_base = KnowledgeBase(all_clauses, counter=last_id)
 
     solver = Solver(knowledge_base)
-    solver.solve_instance([])
+    solver.solve_instance()
 
 
 
