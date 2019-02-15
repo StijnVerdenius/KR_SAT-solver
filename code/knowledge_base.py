@@ -10,3 +10,6 @@ class KnowledgeBase:
 
     def validate(self, assignment):
         pass
+
+    def insert_rules(self, rules):
+        pass
