@@ -60,7 +60,6 @@ class KnowledgeBase:
             if (self.clauses[id].length == 1):
                 literal = self.clauses[id].literals.pop()
                 self.set_literal(literal, literal>0)
-                self.remove_clauses(self.clauses[id])
 
     def simplify_pure_literal(self):
 
