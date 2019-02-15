@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from code.clause import Clause
 
 class KnowledgeBase:
@@ -18,7 +20,14 @@ class KnowledgeBase:
 
         # bookkeeping references
         if bookeeping is None:
-            self.bookkeeping = {}
+            self.bookkeeping = defaultdict(set)
+            for clause in clauses:
+                for literal in clause.literals:
+                    self.bookkeeping[literal].add(clause.id)
+
+
+
+
         else:
             self.bookkeeping = bookeeping
 
@@ -42,10 +51,7 @@ class KnowledgeBase:
             self.clauses.append(Clause(self.clause_counter, rule))
             for literal in rule:
                 self.literal_set.add(literal)
-                try:
-                    self.bookkeeping[literal].append(literal)
-                except:
-                    self.bookkeeping[literal] = [literal]
+                self.bookkeeping[literal].add(self.clause_counter)
             self.clause_counter += 1
 
     def capture_current_state(self):
