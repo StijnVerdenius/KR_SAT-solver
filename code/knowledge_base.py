@@ -24,10 +24,6 @@ class KnowledgeBase:
             for clause in clauses:
                 for literal in clause.literals:
                     self.bookkeeping[literal].add(clause.id)
-
-
-
-
         else:
             self.bookkeeping = bookeeping
 
@@ -54,8 +50,33 @@ class KnowledgeBase:
                 self.bookkeeping[literal].add(self.clause_counter)
             self.clause_counter += 1
 
-    def capture_current_state(self):
-        pass
 
-    def simplify(self, state):
-        pass
+    def simplify(self):
+
+        self.simplify_unit_clauses()
+        self.simplify_pure_literal()
+
+    def simplify_unit_clauses(self):
+        for id in self.clauses:
+            if (self.clauses[id].length == 1):
+                literal = self.clauses[id].literals.pop()
+                self.set_literal(literal, literal>0)
+
+    def simplify_pure_literal(self):
+
+        for literal in self.literal_set:
+
+            attempt = set()
+
+            for id in self.bookkeeping[literal]:
+                if (len(attempt) > 1 ):
+                    break
+
+                if (literal in self.clauses[id].literals):
+                    attempt.add(True)
+                elif ((- literal) in self.clauses[id].literals):
+                    attempt.add(False)
+
+            if (len(attempt) == 1):
+                value = attempt.pop()
+                self.set_literal(literal, value)
