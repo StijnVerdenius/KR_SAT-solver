@@ -1,10 +1,11 @@
 import os
-from typing import List, Generator
+from typing import List, Generator, Tuple
 from code.clause import Clause
 
 
-def read_rules(rules_path: str) -> Generator[Clause, None, None]:
-    id = 0
+def read_rules(rules_path: str, id: int) -> Tuple[List[Clause], int]:
+    # TODO: error on file nt found
+    clauses = []
     with open(rules_path) as f:
         for line in f:
             tokens = line.split(' ')
@@ -13,8 +14,10 @@ def read_rules(rules_path: str) -> Generator[Clause, None, None]:
 
             literals = [int(token) for token in tokens[0:-1]]
 
-            yield Clause(id, literals)
+            clauses.append(Clause(id, literals))
             id += 1
+
+    return clauses, id
 
 
 if __name__ == "__main__":
@@ -25,7 +28,7 @@ if __name__ == "__main__":
     print("Rules:", list(clauses))
 
     clauses = list(read_rules(sudoku_path))
-    expected = [[168], [175], [225], [231], [318], [419], [444], [465], [493], [689], [692], [727], [732], [828], [886], [956], [961], [973]]
+    expected = [{168}, {175}, {225}, {231}, {318}, {419}, {444}, {465}, {493}, {689}, {692}, {727}, {732}, {828}, {886}, {956}, {961}, {973}]
 
     assert str(clauses) == str(expected)
 
