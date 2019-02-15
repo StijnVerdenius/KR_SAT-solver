@@ -1,19 +1,28 @@
 from copy import deepcopy
 from random import choice
 
+from code.knowledge_base import KnowledgeBase
+
+
 class Solver:
 
 
     def __init__(self, knowledge_base):
         self.initial = knowledge_base
 
-    def solve_instance(self, instance):
+    def solve_instance(self):
         """ main function for solving knowledge base """
 
+        # Check tautology (part of simplify, but only done once)
+        self.initial.tautology_simplify()
+
         # init
-        self.initial.insert_rules(instance)
+        # self.initial.insert_rules(instance)
         stack = [self.initial]
         solved = False
+
+
+
 
         while (not solved):
 

@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+from typing import List
 from code.clause import Clause
 
 class KnowledgeBase:
@@ -8,7 +8,7 @@ class KnowledgeBase:
 
         # clauses
         if clauses is None:
-            self.clauses = []
+            self.clauses = {}
         else:
             self.clauses = clauses
 
@@ -58,4 +58,28 @@ class KnowledgeBase:
         pass
 
     def simplify(self, state):
+
+
+
         pass
+
+    def tautology_simplify(self):
+        # Currently O(N^2) check
+        clauses_to_remove = []
+        for clause in self.clauses:
+            if any(-literal in clause.literals for literal in clause.literals):
+                clauses_to_remove.append(clause)
+
+        self.remove_clauses(clauses_to_remove)
+
+    def remove_clauses(self, clauses_to_remove: List[Clause]):
+        """
+        Remove list of clauses from KB
+        :param clauses_to_remove:
+        """
+        for clause in clauses_to_remove:
+            self.clauses.pop(clause.id, None)
+            for literal in clause.literals:
+                self.bookkeeping[literal].remove(clause.id)
+
+

@@ -1,6 +1,11 @@
+from typing import Set, Any
 
 
 class Clause(object):
+
+    length: int
+    id: int
+    literals: Set[int]
 
     def __init__(self, id, literals):
         self.id = id
