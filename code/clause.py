@@ -17,3 +17,9 @@ class Clause(object):
     def resolve(self, literal):
         pass
 
+    def __str__(self):
+        return str(self.literals)
+
+    def __repr__(self):
+        return self.__str__()
+
