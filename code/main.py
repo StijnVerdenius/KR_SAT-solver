@@ -18,15 +18,16 @@ from code.solver import Solver
 
 
 
-def main(program_version: int, sudoku_file_path: str):
-    sudoku_rules_clauses, last_id = read_rules(os.getcwd() + "/../data/sudoku-rules.txt", id=0)
-    sudoku_clauses, last_id = read_rules(sudoku_file_path, last_id)
+def main(program_version: int, dimacs_file_path: str):
+    # sudoku_rules_clauses, last_id = read_rules(os.getcwd() + "/../data/sudoku-rules.txt", id=0)
+    all_clauses = list(read_rules(dimacs_file_path, id=0))
+    last_id = all_clauses[-1].id
 
-    all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
+    # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
     knowledge_base = KnowledgeBase(all_clauses, counter=last_id)
 
     solver = Solver(knowledge_base)
-    solver.solve_instance(knowledge_base)
+    solver.solve_instance([])
 
 
 
