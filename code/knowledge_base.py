@@ -2,20 +2,37 @@ from code.clause import Clause
 
 class KnowledgeBase:
 
-    def __init__(self, clauses = None, current_truth_values = None, bookeeping = None, counter = 0, literal_set = set()):
+    def __init__(self, clauses = None, current_truth_values = None, bookeeping = None, counter = 0, literal_set = None):
+
+        # clauses
         if clauses is None:
             self.clauses = []
+        else:
+            self.clauses = clauses
 
-        self.current_truth_values = current_truth_values
-        self.bookkeeping = bookeeping
+        # current assignment for literals
+        if current_truth_values is None:
+            self.current_truth_values = {}
+        else:
+            self.current_truth_values = current_truth_values
+
+        # bookkeeping references
+        if bookeeping is None:
+            self.bookkeeping = {}
+        else:
+            self.bookkeeping = bookeeping
+
+        # counts amount of clauses
         self.clause_counter = counter
-        self.literal_set = literal_set
-        # self.dependency_graph = {}
 
-    def copy(self):
-        return
+        # keeping track of the amount of literals
+        if literal_set is None:
+            self.literal_set = set()
+        else:
+            self.literal_set = literal_set
 
-    def validate(self, assignment):
+
+    def validate(self):
         pass
 
     def insert_rules(self, rules):

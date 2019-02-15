@@ -1,3 +1,4 @@
+from copy import deepcopy
 
 
 class Solver:
@@ -22,11 +23,27 @@ class Solver:
             # simplify
             current_state.simplify()
 
-            # split
+            solved, error = current_state.validate()
+
+            if (solved):
+
+                # found solution
+                return current_state
+
+            elif(not error):
+
+                # split
+
+                for future_state in self.possible_moves(current_state):
+                    stack.append(future_state)
 
 
-            # check
+    def possible_moves(self, current_state):
+        output = []
 
-            pass
+        for literal in current_state.literal_set:
+            if (literal not in current_state.current_truth_values):
+                new_state = deepcopy(current_state)
+                new_state.current_truth_values[literal] =
 
-        pass
+        return []
