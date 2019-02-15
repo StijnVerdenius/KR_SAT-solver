@@ -1,10 +1,11 @@
 import os
-from typing import List, Generator
+from typing import List, Generator, Dict, Tuple
 from code.clause import Clause
 
 
-def read_rules(rules_path: str, id: int) -> Generator[Clause, None, None]:
+def read_rules(rules_path: str, id: int) -> Tuple[Dict[int, Clause], int]:
     # TODO: error on file nt found
+    clauses = {}
     with open(rules_path) as f:
         for line in f:
             tokens = line.split(' ')
@@ -13,8 +14,10 @@ def read_rules(rules_path: str, id: int) -> Generator[Clause, None, None]:
 
             literals = [int(token) for token in tokens[0:-1]]
 
-            yield Clause(id, literals)
+            clauses[id] = Clause(id, literals)
             id += 1
+
+    return clauses, id
 
 
 if __name__ == "__main__":
