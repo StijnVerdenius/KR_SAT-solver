@@ -1,9 +1,15 @@
 from copy import deepcopy
 from random import choice
-from typing import Tuple
+from typing import Tuple, List, Generator
+
+
 
 from solver.knowledge_base import KnowledgeBase
 
+
+def concat(a, b):
+    yield from a
+    yield from b
 
 
 class Solver:
@@ -20,15 +26,21 @@ class Solver:
 
         # init
         # self.initial.insert_rules(instance)
-        stack = [self.initial]
+        stack = iter([self.initial])
         solved = False
 
 
         while (not solved):
-            if len(stack) == 0:
-                 return current_state, False
+            # if len(stack) == 0:
+            #      return current_state, False
+            try:
+                current_state = next(stack)
+            except StopIteration:
+                return current_state, False
+
             # get next element from stack
-            current_state = stack.pop(0)
+            # current_state = stack.pop()
+            # print(f"Stack size: {len(stack)}")
 
             solved, _ = current_state.validate()
 
@@ -51,11 +63,13 @@ class Solver:
             else:
                 print("splitting")
                 # split
-                for future_state in self.possible_moves(current_state):
-                    stack.append(future_state)
+                future_states = self.possible_moves(current_state)
+                stack = concat(future_states, stack)
+                # for future_state in self.possible_moves(current_state):
+                #     stack.append(future_state)
 
-    def possible_moves(self, current_state : KnowledgeBase) -> list:
-        output = []
+    def possible_moves(self, current_state : KnowledgeBase) -> Generator[KnowledgeBase, None, None]:
+        # output = []
         for literal in list(current_state.bookkeeping.keys()):
             if literal in current_state.current_set_literals:
                 continue
@@ -67,6 +81,8 @@ class Solver:
                     print("Reached non-valid state, end-of-tree")
                     continue
 
-                output.append(new_state)
+                # output.append(new_state)
+                yield new_state
 
-        return output
+        # print(f"Generated possible moves {len(output)}")
+        # return output

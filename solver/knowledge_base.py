@@ -112,6 +112,7 @@ class KnowledgeBase:
         :param truth_value:
         """
         # First check if this is a allowed op.
+        literal = abs(literal)
         for clause_id in self.bookkeeping[literal]:
             clause = self.clauses[clause_id]
             if len(clause.literals) != 1:
@@ -120,7 +121,7 @@ class KnowledgeBase:
                 return False
 
         # Set literal
-        self.current_set_literals[literal] = truth_value
+        self.current_set_literals[abs(literal)] = truth_value
         clauses_to_remove = []
         for clause_id in self.bookkeeping[literal]:
             clause = self.clauses[clause_id]
