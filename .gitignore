@@ -103,5 +103,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-
+# IDEA
 .idea
+
+# Virtual-env
+venv
