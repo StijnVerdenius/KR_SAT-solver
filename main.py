@@ -39,14 +39,13 @@ def main(program_version: int, dimacs_file_path: str):
 if __name__ == "__main__":
     # Default vars:
     program_version = 1
-    input_file = os.getcwd() + "/../data/sudoku-example.txt"
+    input_file = os.getcwd() + "/data/sudoku-example.txt"
 
     if len(sys.argv) == 3:
         option = sys.argv[1]
         if len(option) != 3 or option[0:1] != '-S':
             raise RuntimeError("Invalid program option")
         program_version = int(option[2])
-
 
         file = sys.argv[2]
 
