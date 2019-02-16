@@ -1,6 +1,6 @@
 import os
 from typing import List, Generator, Dict, Tuple
-from code.clause import Clause
+from solver.clause import Clause
 
 
 def read_rules(rules_path: str, id: int) -> Tuple[Dict[int, Clause], int]:

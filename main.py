@@ -1,9 +1,10 @@
 import sys
 import os
 
-from code.knowledge_base import KnowledgeBase
-from code.read import read_rules
-from code.solver import Solver
+from solver.knowledge_base import KnowledgeBase
+from solver.read import read_rules
+from solver.solver import Solver
+from solver.visualizer import print_sudoku
 
 """
     1. SAT Solver
@@ -26,7 +27,10 @@ def main(program_version: int, dimacs_file_path: str):
     knowledge_base = KnowledgeBase(all_clauses, counter=last_id)
 
     solver = Solver(knowledge_base)
-    solver.solve_instance()
+
+    solution, solved = solver.solve_instance()
+
+    print_sudoku(solution)
 
 
 
