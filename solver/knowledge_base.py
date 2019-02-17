@@ -70,7 +70,7 @@ class KnowledgeBase:
             literal = clause.first()
             valid = self.set_literal(literal, literal > 0)
             if not valid:
-                raise Exception("??")
+                raise Exception("This should not happen")
             # print(f"Simplified unit clause {literal}")
 
     def simplify_pure_literal(self):
@@ -81,7 +81,6 @@ class KnowledgeBase:
             for clause_id in self.bookkeeping[literal]:
                 if len(attempt) > 1:
                     break
-
                 if literal in self.clauses[clause_id].literals:
                     attempt.add(True)
                 elif (-literal) in self.clauses[clause_id].literals:
@@ -92,10 +91,10 @@ class KnowledgeBase:
                 valid = self.set_literal(literal, value)
                 if not valid:
                     raise Exception("??")
-                # print(f"Pure literal set {literal} {value}")
+                print(f"Pure literal: {literal}={value}")
 
     def tautology_simplify(self):
-        removed = 1
+        removed = 0
         for clause in list(self.clauses.values()):
             if any((-literal) in clause.literals for literal in clause.literals):
                 self.remove_clauses([clause])
@@ -113,12 +112,12 @@ class KnowledgeBase:
         """
         # First check if this is a allowed op.
         literal = abs(literal)
-        for clause_id in self.bookkeeping[literal]:
-            clause = self.clauses[clause_id]
-            if len(clause.literals) != 1:
-                continue
-            if (truth_value is True and (-literal) in clause.literals) or (truth_value is False and literal in clause.literals):
-                return False
+        # for clause_id in self.bookkeeping[literal]:
+        #     clause = self.clauses[clause_id]
+        #     if len(clause.literals) != 1:
+        #         continue
+        #     if (truth_value is True and (-literal) in clause.literals) or (truth_value is False and literal in clause.literals):
+        #         return False
 
         # Set literal
         self.current_set_literals[abs(literal)] = truth_value
@@ -132,19 +131,21 @@ class KnowledgeBase:
             elif truth_value is True and literal in clause.literals:
                 clauses_to_remove.append(clause)
             elif (truth_value is False and literal in clause.literals) or (truth_value is True and (-literal) in clause.literals):
+
                 # Remove empty and satisfied clauses
                 if -literal in clause.literals:
                     clause.literals.remove(-literal)
                 else:
                     clause.literals.remove(literal)
+
                 if len(clause.literals) == 0:
-                    raise Exception("This should not happen")
-                    # clauses_to_remove.append(clause)
+                    return False
 
 
 
+        if literal in self.bookkeeping:
+            del self.bookkeeping[literal]
         self.remove_clauses(clauses_to_remove)
-        del self.bookkeeping[literal]
 
         return True
 
@@ -158,5 +159,13 @@ class KnowledgeBase:
             del self.clauses[clause.id]
             # print(f"Removed clause {clause.id}")
             for literal in clause.literals:
-                self.bookkeeping[abs(literal)].remove(clause.id)
+                abs_literal = abs(literal)
+                if abs_literal not in self.bookkeeping:
+                    # This can happen if we remove a tautology
+                    continue
+
+                self.bookkeeping[abs_literal].remove(clause.id)
+                if len(self.bookkeeping[abs_literal]) == 0:
+                    del self.bookkeeping[abs_literal]
+
                 # print(f"Removed bookkeeping[{literal}] => {clause.id}")

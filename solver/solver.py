@@ -1,9 +1,7 @@
 from copy import deepcopy
-from random import choice
 from typing import Tuple, List, Generator
 
-
-
+from solver.clause import Clause
 from solver.knowledge_base import KnowledgeBase
 
 
@@ -13,7 +11,6 @@ def concat(a, b):
 
 
 class Solver:
-
 
     def __init__(self, knowledge_base):
         self.initial = knowledge_base
@@ -28,7 +25,6 @@ class Solver:
         # self.initial.insert_rules(instance)
         stack = iter([self.initial])
         solved = False
-
 
         while (not solved):
             # if len(stack) == 0:
@@ -49,7 +45,6 @@ class Solver:
                 print("Solved")
                 return current_state, True
 
-
             # simplify
             current_state.simplify()
 
@@ -68,7 +63,7 @@ class Solver:
                 # for future_state in self.possible_moves(current_state):
                 #     stack.append(future_state)
 
-    def possible_moves(self, current_state : KnowledgeBase) -> Generator[KnowledgeBase, None, None]:
+    def possible_moves(self, current_state: KnowledgeBase) -> Generator[KnowledgeBase, None, None]:
         # output = []
         for literal in list(current_state.bookkeeping.keys()):
             if literal in current_state.current_set_literals:
@@ -77,6 +72,7 @@ class Solver:
             for choice in [True, False]:
                 new_state = deepcopy(current_state)
                 valid = new_state.set_literal(literal, choice)
+                print(f"Choice {literal}={choice}")
                 if not valid:
                     print("Reached non-valid state, end-of-tree")
                     continue
@@ -86,3 +82,32 @@ class Solver:
 
         # print(f"Generated possible moves {len(output)}")
         # return output
+
+def test_solver_tautology():
+    clauses = {1: Clause(1, [1, 2, 3, -1])}
+    kb = KnowledgeBase(clauses, counter=1)
+    s = Solver(kb)
+
+    assert s.solve_instance()[1] is True
+
+
+def test_solver_diplomatic_puzzle():
+    clauses = {1: Clause(1, [1, -2]), 2: Clause(2, [2, 3]), 3: Clause(3, [-3, -1])}
+    kb = KnowledgeBase(clauses, counter=3)
+    s = Solver(kb)
+
+    res, solved = s.solve_instance()
+
+    assert res.current_set_literals == {1:True, 2: True, 3: False}
+    assert solved is True
+
+def test_solver_case3():
+    clauses = [Clause(1, [1, -2]), Clause(2, [1, -3, 2]), Clause(3, [3, 2, -1]), Clause(4, [-2, -1, 3])]
+    clauses = {clause.id: clause for clause in clauses}
+    kb = KnowledgeBase(clauses, counter=3)
+    s = Solver(kb)
+
+    res, solved = s.solve_instance()
+
+    # assert res.current_set_literals == {1:True, 2: True, 3: True}
+    # assert solved is True
