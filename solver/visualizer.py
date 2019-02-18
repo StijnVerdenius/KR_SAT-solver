@@ -8,8 +8,6 @@ except ImportError:
 
 
 def print_sudoku(base : KnowledgeBase, shape = (9, 9)):
-
-
     sudoku = np.zeros(shape)
 
     literals = list(filter(lambda x: x > 0,base.current_set_literals.keys()))
