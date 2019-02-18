@@ -27,7 +27,7 @@ def main(program_version: int, dimacs_file_path: str):
     all_clauses, last_id = read_rules(dimacs_file_path, id=0)
 
     # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
-    knowledge_base = KnowledgeBase(all_clauses, counter=last_id)
+    knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
 
     solver = Solver(knowledge_base)
 

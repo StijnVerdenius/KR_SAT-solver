@@ -1,5 +1,5 @@
 import os
-from typing import List, Generator, Dict, Tuple
+from typing import Dict, Tuple
 from solver.clause import Clause
 
 

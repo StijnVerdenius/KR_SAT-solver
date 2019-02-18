@@ -1,27 +1,30 @@
-from typing import Set, Any, Dict, Tuple
+from typing import Set, Dict, Tuple
 
 
 class Clause(object):
+    """
+    Main class for clauses
+    holds and id and a set of literals
 
-    length: int
+    """
+
     id: int
     literals: Set[int]
 
     def __init__(self, id, literals):
         self.id = id
         self.literals = set(literals)
-        self.length = len(self.literals)
 
     def __len__(self):
         return len(self.literals)
-
 
     def validate(self, assigned_literals: Dict[int, bool]) -> Tuple[bool, bool]:
         """
         Evaluates the clause against a assignment of literals
         :param assigned_literals:
-        :return:
+        :return: boolean
         """
+
         for literal in self.literals:
             literal = abs(literal)
             if literal not in assigned_literals:
@@ -48,6 +51,6 @@ class Clause(object):
         Fastest using for-loop
         Link: https://stackoverflow.com/questions/59825/how-to-retrieve-an-element-from-a-set-without-removing-it
         """
+
         for literal in self.literals:
             return literal
-

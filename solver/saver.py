@@ -1,6 +1,8 @@
-import _pickle as pickle
-from copy import deepcopy
-from functools import lru_cache
+try:
+    import _pickle as pickle
+except ImportError:
+    raise RuntimeError("Please install _pickle")
+
 from solver.knowledge_base import KnowledgeBase
 
 class Saver():
@@ -29,13 +31,11 @@ class Saver():
     def personal_deepcopy(self, obj):
         return pickle.loads(pickle.dumps(obj, protocol=-1))
 
-    def deepcopy_kb(self, base : KnowledgeBase):
+    def deepcopy_knowledge_base(self, base : KnowledgeBase):
 
         clauses_ = self.personal_deepcopy(base.clauses)
         set_literals_ = {key: base.current_set_literals[key] for key in base.current_set_literals}
-        # set_literals_ = self.personal_deepcopy(base.current_set_literals)
-        # bookkeeping_ = {key: base.bookkeeping[key] for key in base.bookkeeping}
         bookkeeping_ = self.personal_deepcopy(base.bookkeeping)
 
-        return KnowledgeBase(clauses_, set_literals_, bookkeeping_, base.clause_counter)
+        return KnowledgeBase(clauses=clauses_, current_set_literals= set_literals_, bookkeeping=bookkeeping_, clause_counter= base.clause_counter, literal_counter= base.literal_counter)
 

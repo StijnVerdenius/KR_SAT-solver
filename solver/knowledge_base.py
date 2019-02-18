@@ -4,12 +4,24 @@ from solver.clause import Clause
 
 
 class KnowledgeBase:
+    """
+    knowledge base class
+
+    holds main functionality for a knowledge base, including operations on its data
+
+    contains:
+    - clauses
+    - bookkeeping
+    - current assignments
+    - todo: dependency graph?
+
+    """
 
     bookkeeping: Dict[int, Set[int]]
     clauses: Dict[int, Clause]
     current_set_literals: Dict[int, bool]
 
-    def __init__(self, clauses = None, current_set_literals = None, bookeeping = None, counter = 0):
+    def __init__(self, clauses = None, current_set_literals = None, bookkeeping = None, clause_counter = 0, literal_counter = -1):
 
         # clauses
         if clauses is None:
@@ -24,16 +36,20 @@ class KnowledgeBase:
             self.current_set_literals = current_set_literals
 
         # bookkeeping references
-        if bookeeping is None:
+        if bookkeeping is None:
             self.bookkeeping = defaultdict(set)
             for clause in clauses.values():
                 for literal in clause.literals:
                     self.bookkeeping[abs(literal)].add(clause.id)
         else:
-            self.bookkeeping = bookeeping
+            self.bookkeeping = bookkeeping
+
+        self.literal_counter = literal_counter
+        if (literal_counter < 0):
+            self.literal_counter = len(self.bookkeeping.keys())
 
         # counts amount of clauses
-        self.clause_counter = counter
+        self.clause_counter = clause_counter
 
 
     def validate(self) -> Tuple[bool, bool]:
@@ -48,37 +64,32 @@ class KnowledgeBase:
 
         return True, False
 
-
-    # def insert_rules(self, rules):
-    #     """ inserts rules to knowledge base """
-    #
-    #     for rule in rules:
-    #         self.clauses.append(Clause(self.clause_counter, rule))
-    #         for literal in rule:
-    #             self.literal_set.add(literal)
-    #             self.bookkeeping[literal].add(self.clause_counter)
-    #         self.clause_counter += 1
-
     def simplify(self):
+        """
+        removes redundant information from knowledge base
+        """
         self.simplify_unit_clauses()
         self.simplify_pure_literal()
 
     def simplify_unit_clauses(self):
+        """
+        simplifies knowledge base for unit clauses
+        """
         for clause in list(self.clauses.values()):
 
             if len(clause.literals) != 1:
-                # if clause.length != 1:
                 continue
 
             literal = clause.first()
-            if (literal == -221 or literal == 221):
-                print("break")
-            print(f"Simplifying unit clause [{clause.id}]  {literal}")
+
             valid = self.set_literal(literal, literal > 0)
             if not valid:
-                raise Exception("This should not happen")
+                raise Exception("Invalid simplification, should not happen")
 
     def simplify_pure_literal(self):
+        """
+        simplifies knowledge base for pure literals
+        """
         # Wrap in list call is necessary to not change dict while iterating
         for literal in list(self.bookkeeping.keys()):
             attempt = set()
@@ -95,10 +106,14 @@ class KnowledgeBase:
                 value = attempt.pop()
                 valid = self.set_literal(literal, value)
                 if not valid:
-                    raise Exception("This should not happen")
-                print(f"Pure literal: {literal}={value}")
+                    raise Exception("Invalid simplification, should not happen")
 
     def simplify_tautology(self):
+        """
+        simplifies knowledge base for tautologies clauses
+        :return:
+        """
+
         removed = 0
         for clause in list(self.clauses.values()):
             if any((-literal) in clause.literals for literal in clause.literals):
@@ -115,25 +130,13 @@ class KnowledgeBase:
         :param truth_value:
         """
 
-
-
         # First check if this is a allowed op.
         literal = abs(literal)
-
-        print(f"setting literal {literal} to {truth_value}")
-        # for clause_id in self.bookkeeping[literal]:
-        #     clause = self.clauses[clause_id]
-        #     if len(clause.literals) != 1:
-        #         continue
-        #     if (truth_value is True and (-literal) in clause.literals) or (truth_value is False and literal in clause.literals):
-        #         return False
 
         # Set literal
         self.current_set_literals[literal] = truth_value
 
         clauses_to_remove = []
-        # if literal == 221:
-        #     print(self.bookkeeping[-literal])
         for clause_id in self.bookkeeping[literal]:
             clause = self.clauses[clause_id]
 
@@ -153,11 +156,8 @@ class KnowledgeBase:
                 if len(clause.literals) == 0:
                     return False
 
-
-
         if literal in self.bookkeeping:
             del self.bookkeeping[literal]
-            print(f"Removed bookkeeping[{literal}] => all2")
 
         self.remove_clauses(clauses_to_remove)
 
@@ -171,20 +171,15 @@ class KnowledgeBase:
         """
         for clause in clauses_to_remove:
             del self.clauses[clause.id]
-            print(f"Removed clause {clause.id}")
             for literal in clause.literals:
                 abs_literal = abs(literal)
                 if abs_literal not in self.bookkeeping:
-                    # This can happen if we remove a tautology
+                    # This can happen if we remove a tautology forexample
                     continue
 
                 self.bookkeeping[abs_literal].remove(clause.id)
                 if len(self.bookkeeping[abs_literal]) == 0:
                     del self.bookkeeping[abs_literal]
-
-                    print(f"Removed bookkeeping[{abs_literal}] => all")
-
-                print(f"Removed bookkeeping[{abs_literal}] => {clause.id}")
 
     def __str__(self):
         return str({"bookkeeping" : self.bookkeeping, "current_set_literals" : self.current_set_literals, "clause_counter" : self.clause_counter, "clauses" : self.clauses})
