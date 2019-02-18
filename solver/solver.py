@@ -37,7 +37,7 @@ class Solver:
                 print(f"\rLength solution: {len(current_state.current_set_literals)}", end='')
                 if (len(current_state.current_set_literals) > 100):
                     print("start")
-                    raise StopIteration ## test
+                    # raise StopIteration ## test
             except StopIteration:
                 return current_state, False
 

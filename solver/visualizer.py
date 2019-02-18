@@ -8,10 +8,15 @@ except ImportError:
 
 
 def print_sudoku(base : KnowledgeBase, shape = (9, 9)):
+
+
     sudoku = np.zeros(shape)
 
     literals = list(filter(lambda x: x > 0,base.current_set_literals.keys()))
     for literal in literals:
+
+        if (not base.current_set_literals[literal]):
+            continue
 
         # if (clause.length > 1):
         #     raise Exception("Not-unit-clause in base")
