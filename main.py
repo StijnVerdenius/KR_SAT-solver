@@ -18,7 +18,6 @@ from solver.visualizer import print_sudoku
 """
 
 
-
 def main(program_version: int, dimacs_file_path: str):
     import cProfile, pstats, io
     pr = cProfile.Profile()
@@ -44,9 +43,6 @@ def main(program_version: int, dimacs_file_path: str):
     print(s.getvalue())
 
 
-
-
-
 if __name__ == "__main__":
     # Default vars:
     program_version = 1
@@ -58,7 +54,7 @@ if __name__ == "__main__":
             raise RuntimeError("Invalid program option")
         program_version = int(option[2])
 
-        file = sys.argv[2]
+        input_file = sys.argv[2]
 
     main(program_version, input_file)
 

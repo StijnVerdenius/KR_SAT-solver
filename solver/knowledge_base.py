@@ -67,16 +67,16 @@ class KnowledgeBase:
         for clause in list(self.clauses.values()):
 
             if len(clause.literals) != 1:
-            # if clause.length != 1:
+                # if clause.length != 1:
                 continue
 
             literal = clause.first()
             if (literal == -221 or literal == 221):
                 print("break")
+            print(f"Simplifying unit clause [{clause.id}]  {literal}")
             valid = self.set_literal(literal, literal > 0)
             if not valid:
                 raise Exception("This should not happen")
-            print(f"Simplified unit clause {literal}")
 
     def simplify_pure_literal(self):
         # Wrap in list call is necessary to not change dict while iterating
@@ -132,6 +132,8 @@ class KnowledgeBase:
         self.current_set_literals[literal] = truth_value
 
         clauses_to_remove = []
+        # if literal == 221:
+        #     print(self.bookkeeping[-literal])
         for clause_id in self.bookkeeping[literal]:
             clause = self.clauses[clause_id]
 
@@ -180,9 +182,9 @@ class KnowledgeBase:
                 if len(self.bookkeeping[abs_literal]) == 0:
                     del self.bookkeeping[abs_literal]
 
-                    print(f"Removed bookkeeping[{literal}] => all")
+                    print(f"Removed bookkeeping[{abs_literal}] => all")
 
-                print(f"Removed bookkeeping[{literal}] => {clause.id}")
+                print(f"Removed bookkeeping[{abs_literal}] => {clause.id}")
 
     def __str__(self):
         return str({"bookkeeping" : self.bookkeeping, "current_set_literals" : self.current_set_literals, "clause_counter" : self.clause_counter, "clauses" : self.clauses})

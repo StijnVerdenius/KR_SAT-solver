@@ -13,7 +13,7 @@ class Clause(object):
         self.length = len(self.literals)
 
     def __len__(self):
-        return self.length
+        return len(self.literals)
 
 
     def validate(self, assigned_literals: Dict[int, bool]) -> Tuple[bool, bool]:
