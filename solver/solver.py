@@ -1,6 +1,7 @@
 from copy import deepcopy
 from typing import Tuple, List, Generator
 
+from solver.saver import Saver
 from solver.clause import Clause
 from solver.knowledge_base import KnowledgeBase
 
@@ -14,16 +15,18 @@ class Solver:
 
     def __init__(self, knowledge_base):
         self.initial = knowledge_base
+        self.saver = Saver("./temp/")
 
     def solve_instance(self) -> Tuple[KnowledgeBase, bool]:
         """ main function for solving knowledge base """
 
         # Check tautology (part of simplify, but only done once)
-        self.initial.tautology_simplify()
+        self.initial.simplify_tautology()
 
         # init
         # self.initial.insert_rules(instance)
         stack = iter([self.initial])
+        # stack = [self.initial]
         solved = False
 
         while (not solved):
@@ -31,6 +34,10 @@ class Solver:
             #      return current_state, False
             try:
                 current_state = next(stack)
+                print(f"\rLength solution: {len(current_state.current_set_literals)}", end='')
+                if (len(current_state.current_set_literals) > 100):
+                    print("start")
+                    raise StopIteration ## test
             except StopIteration:
                 return current_state, False
 
@@ -42,7 +49,7 @@ class Solver:
 
             if solved:
                 # found solution
-                print("Solved")
+                print("\nSolved")
                 return current_state, True
 
             # simplify
@@ -52,11 +59,11 @@ class Solver:
 
             if solved:
                 # found solution
-                print("Solved")
+                print("\nSolved")
                 return current_state, True
             # elif not error:
             else:
-                print("splitting")
+                # print("splitting")
                 # split
                 future_states = self.possible_moves(current_state)
                 stack = concat(future_states, stack)
@@ -66,15 +73,20 @@ class Solver:
     def possible_moves(self, current_state: KnowledgeBase) -> Generator[KnowledgeBase, None, None]:
         # output = []
         for literal in list(current_state.bookkeeping.keys()):
+
             if literal in current_state.current_set_literals:
                 continue
 
             for choice in [True, False]:
-                new_state = deepcopy(current_state)
+
+                new_state = self.saver.deepcopy_kb(current_state)
+                # new_state = self.saver.personal_deepcopy(current_state)
+
                 valid = new_state.set_literal(literal, choice)
-                print(f"Choice {literal}={choice}")
+
+                # print(f"Choice {literal}={choice}")
                 if not valid:
-                    print("Reached non-valid state, end-of-tree")
+                    # print("Reached non-valid state, end-of-tree")
                     continue
 
                 # output.append(new_state)
@@ -102,6 +114,7 @@ def test_solver_diplomatic_puzzle():
     assert solved is True
 
 def test_solver_case3():
+
     clauses = [Clause(1, [1, -2]), Clause(2, [1, -3, 2]), Clause(3, [3, 2, -1]), Clause(4, [-2, -1, 3])]
     clauses = {clause.id: clause for clause in clauses}
     kb = KnowledgeBase(clauses, counter=3)

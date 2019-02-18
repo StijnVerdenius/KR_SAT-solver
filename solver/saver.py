@@ -1,4 +1,6 @@
-import pickle
+import _pickle as pickle
+from functools import lru_cache
+from solver.knowledge_base import KnowledgeBase
 
 class Saver():
 
@@ -22,3 +24,11 @@ class Saver():
             raise FileNotFoundError("{} not loaded because file is missing".format(name))
         print("Loaded {}".format(name))
         return obj
+
+    def personal_deepcopy(self, obj):
+        return pickle.loads(pickle.dumps(obj, protocol=-1))
+
+    def deepcopy_kb(self, base : KnowledgeBase):
+
+        return KnowledgeBase(self.personal_deepcopy(base.clauses), {key : base.current_set_literals[key] for key in base.current_set_literals}, {key : base.bookkeeping[key] for key in base.bookkeeping}, base.clause_counter)
+

@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import List, Dict, Set, Tuple
 from solver.clause import Clause
 
+
 class KnowledgeBase:
 
     bookkeeping: Dict[int, Set[int]]
@@ -64,14 +65,18 @@ class KnowledgeBase:
 
     def simplify_unit_clauses(self):
         for clause in list(self.clauses.values()):
-            if clause.length != 1:
+
+            if len(clause.literals) != 1:
+            # if clause.length != 1:
                 continue
 
             literal = clause.first()
+            if (literal == -221 or literal == 221):
+                print("break")
             valid = self.set_literal(literal, literal > 0)
             if not valid:
                 raise Exception("This should not happen")
-            # print(f"Simplified unit clause {literal}")
+            print(f"Simplified unit clause {literal}")
 
     def simplify_pure_literal(self):
         # Wrap in list call is necessary to not change dict while iterating
@@ -90,10 +95,10 @@ class KnowledgeBase:
                 value = attempt.pop()
                 valid = self.set_literal(literal, value)
                 if not valid:
-                    raise Exception("??")
+                    raise Exception("This should not happen")
                 print(f"Pure literal: {literal}={value}")
 
-    def tautology_simplify(self):
+    def simplify_tautology(self):
         removed = 0
         for clause in list(self.clauses.values()):
             if any((-literal) in clause.literals for literal in clause.literals):
@@ -103,15 +108,19 @@ class KnowledgeBase:
         print(f"Tautology simplify removed {removed} clauses")
 
 
-
     def set_literal(self, literal: int, truth_value: bool) -> bool:
         """
         Set a literal and its boolean value
         :param literal:
         :param truth_value:
         """
+
+
+
         # First check if this is a allowed op.
         literal = abs(literal)
+
+        print(f"setting literal {literal} to {truth_value}")
         # for clause_id in self.bookkeeping[literal]:
         #     clause = self.clauses[clause_id]
         #     if len(clause.literals) != 1:
@@ -120,15 +129,16 @@ class KnowledgeBase:
         #         return False
 
         # Set literal
-        self.current_set_literals[abs(literal)] = truth_value
+        self.current_set_literals[literal] = truth_value
+
         clauses_to_remove = []
         for clause_id in self.bookkeeping[literal]:
             clause = self.clauses[clause_id]
 
             # If we set P to true and ~P is set, we can remove the clause
-            if truth_value is False and (-literal) in clause.literals:
+            if (not truth_value) and (-literal) in clause.literals:
                 clauses_to_remove.append(clause)
-            elif truth_value is True and literal in clause.literals:
+            elif truth_value and literal in clause.literals:
                 clauses_to_remove.append(clause)
             elif (truth_value is False and literal in clause.literals) or (truth_value is True and (-literal) in clause.literals):
 
@@ -145,6 +155,8 @@ class KnowledgeBase:
 
         if literal in self.bookkeeping:
             del self.bookkeeping[literal]
+            print(f"Removed bookkeeping[{literal}] => all2")
+
         self.remove_clauses(clauses_to_remove)
 
         return True
@@ -157,7 +169,7 @@ class KnowledgeBase:
         """
         for clause in clauses_to_remove:
             del self.clauses[clause.id]
-            # print(f"Removed clause {clause.id}")
+            print(f"Removed clause {clause.id}")
             for literal in clause.literals:
                 abs_literal = abs(literal)
                 if abs_literal not in self.bookkeeping:
@@ -168,4 +180,12 @@ class KnowledgeBase:
                 if len(self.bookkeeping[abs_literal]) == 0:
                     del self.bookkeeping[abs_literal]
 
-                # print(f"Removed bookkeeping[{literal}] => {clause.id}")
+                    print(f"Removed bookkeeping[{literal}] => all")
+
+                print(f"Removed bookkeeping[{literal}] => {clause.id}")
+
+    def __str__(self):
+        return str({"bookkeeping" : self.bookkeeping, "current_set_literals" : self.current_set_literals, "clause_counter" : self.clause_counter, "clauses" : self.clauses})
+
+    def __repr__(self):
+        return self.__str__()
