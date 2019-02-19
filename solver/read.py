@@ -1,7 +1,10 @@
 import os
 from typing import Dict, Tuple
 from solver.clause import Clause
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    raise RuntimeError("Please install numpy")
 import math
 
 def read_rules_string(rules_str: str, id: int) -> Tuple[Dict[int, Clause], int]:
