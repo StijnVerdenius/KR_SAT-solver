@@ -1,9 +1,11 @@
 import sys
 import os
 
+from solver.dimacs_write import to_dimacs_str
 from solver.knowledge_base import KnowledgeBase
 from solver.read import read_rules
 from solver.solver import *
+from solver.stats import print_stats
 from solver.visualizer import print_sudoku
 
 """
@@ -19,9 +21,12 @@ from solver.visualizer import print_sudoku
 
 
 def main(program_version: int, dimacs_file_path: str):
-    import cProfile, pstats, io
-    pr = cProfile.Profile()
-    pr.enable()
+    profile = False
+
+    if profile:
+        import cProfile, pstats, io
+        pr = cProfile.Profile()
+        pr.enable()
 
     # sudoku_rules_clauses, last_id = read_rules(os.getcwd() + "/../data/sudoku-rules.txt", id=0)
     all_clauses, last_id = read_rules(dimacs_file_path, id=0)
@@ -31,16 +36,19 @@ def main(program_version: int, dimacs_file_path: str):
 
     solver = Solver(knowledge_base)
 
-    solution, solved = solver.solve_instance()
+    solution, solved, split_statistics = solver.solve_instance()
 
     print_sudoku(solution)
+    print_stats(split_statistics)
+    dimacs = to_dimacs_str(solution)
 
-    pr.disable()
-    s = io.StringIO()
-    sortby = 'cumulative'
-    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    ps.print_stats()
-    print(s.getvalue())
+    if profile:
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
 
 
 if __name__ == "__main__":
