@@ -34,7 +34,8 @@ class Saver():
     def deepcopy_knowledge_base(self, base : KnowledgeBase):
 
         clauses_ = self.personal_deepcopy(base.clauses)
-        set_literals_ = {key: base.current_set_literals[key] for key in base.current_set_literals}
+        # set_literals_ = {key: base.current_set_literals[key] for key in base.current_set_literals}
+        set_literals_ = self.personal_deepcopy(base.current_set_literals)
         bookkeeping_ = self.personal_deepcopy(base.bookkeeping)
 
         return KnowledgeBase(clauses=clauses_, current_set_literals= set_literals_, bookkeeping=bookkeeping_, clause_counter= base.clause_counter, literal_counter= base.literal_counter)

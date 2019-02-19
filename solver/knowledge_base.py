@@ -64,12 +64,18 @@ class KnowledgeBase:
 
         return True, False
 
-    def simplify(self):
+    def simplify(self) -> bool:
         """
         removes redundant information from knowledge base
         """
-        self.simplify_unit_clauses()
-        self.simplify_pure_literal()
+        valid = self.simplify_unit_clauses()
+        if not valid:
+            return valid
+        valid = self.simplify_pure_literal()
+        if not valid:
+            return valid
+
+        return True
 
     def simplify_unit_clauses(self):
         """
@@ -82,9 +88,12 @@ class KnowledgeBase:
 
             literal = clause.first()
 
-            valid = self.set_literal(literal, literal > 0)
+            truth_value = literal > 0
+            valid = self.set_literal(literal, truth_value)
             if not valid:
-                raise Exception("Invalid simplification, should not happen")
+                return valid
+
+        return True
 
     def simplify_pure_literal(self):
         """
@@ -106,7 +115,9 @@ class KnowledgeBase:
                 value = attempt.pop()
                 valid = self.set_literal(literal, value)
                 if not valid:
-                    raise Exception("Invalid simplification, should not happen")
+                    return valid
+
+        return True
 
     def simplify_tautology(self):
         """
@@ -131,33 +142,34 @@ class KnowledgeBase:
         """
 
         # First check if this is a allowed op.
-        literal = abs(literal)
+        abs_literal = abs(literal)
 
         # Set literal
         self.current_set_literals[literal] = truth_value
 
         clauses_to_remove = []
-        for clause_id in self.bookkeeping[literal]:
+        for clause_id in self.bookkeeping[abs_literal]:
             clause = self.clauses[clause_id]
 
             # If we set P to true and ~P is set, we can remove the clause
-            if (not truth_value) and (-literal) in clause.literals:
+            if (not truth_value) and (-abs_literal) in clause.literals:
                 clauses_to_remove.append(clause)
-            elif truth_value and literal in clause.literals:
+            elif truth_value and abs_literal in clause.literals:
                 clauses_to_remove.append(clause)
-            elif (truth_value is False and literal in clause.literals) or (truth_value is True and (-literal) in clause.literals):
-
-                # Remove empty and satisfied clauses
-                if -literal in clause.literals:
-                    clause.literals.remove(-literal)
-                else:
-                    clause.literals.remove(literal)
-
-                if len(clause.literals) == 0:
+            else:
+                #(truth_value is False and literal in clause.literals) or (truth_value is True and (-literal) in clause.literals):
+                if len(clause.literals) == 1:
                     return False
 
-        if literal in self.bookkeeping:
-            del self.bookkeeping[literal]
+                # Remove empty and satisfied clauses
+                if -abs_literal in clause.literals:
+                    clause.literals.remove(-abs_literal)
+                if abs_literal in clause.literals:
+                    clause.literals.remove(abs_literal)
+
+
+        if abs_literal in self.bookkeeping:
+            del self.bookkeeping[abs_literal]
 
         self.remove_clauses(clauses_to_remove)
 

@@ -1,3 +1,4 @@
+import itertools
 from typing import Tuple, List, Generator
 from solver.saver import Saver
 from solver.knowledge_base import KnowledgeBase
@@ -38,7 +39,9 @@ class Solver:
                 return current_state, True, split_statistics
 
             # simplify
-            current_state.simplify()
+            valid = current_state.simplify()
+            if not valid:
+                continue
 
             # check again
             solved, _ = current_state.validate()
@@ -50,7 +53,8 @@ class Solver:
             else:
                 # split
                 future_states = self.possible_splits(current_state)
-                stack = self.concat(future_states, stack)
+                # stack = self.concat(future_states, stack)
+                stack = itertools.chain(future_states, stack)
 
     def possible_splits(self, current_state: KnowledgeBase) -> Generator[KnowledgeBase, None, None]:
         """
