@@ -27,4 +27,4 @@ def print_sudoku(base : KnowledgeBase, shape = (9, 9)):
 
         sudoku[x, y] = value
 
-    print(sudoku)
+    print(sudoku.T)
