@@ -1,9 +1,12 @@
 import sys
 import os
 
+from solver.dimacs_write import to_dimacs_str
 from solver.knowledge_base import KnowledgeBase
-from solver.read import read_rules
+from solver.read import read_rules_dimacs as read_rules
+from solver.read import read_text_sudoku as read_problem
 from solver.solver import *
+from solver.stats import print_stats
 from solver.visualizer import print_sudoku
 
 """
@@ -18,13 +21,11 @@ from solver.visualizer import print_sudoku
 """
 
 
-def main(program_version: int, dimacs_file_path: str):
-    import cProfile, pstats, io
-    pr = cProfile.Profile()
-    pr.enable()
+def main(program_version: int, rules_dimacs_file_path: str):
+
 
     # sudoku_rules_clauses, last_id = read_rules(os.getcwd() + "/../data/sudoku-rules.txt", id=0)
-    all_clauses, last_id = read_rules(dimacs_file_path, id=0)
+    all_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
 
     # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
     knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
@@ -35,18 +36,44 @@ def main(program_version: int, dimacs_file_path: str):
 
     print_sudoku(solution)
 
-    pr.disable()
-    s = io.StringIO()
-    sortby = 'cumulative'
-    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    ps.print_stats()
-    print(s.getvalue())
+
+def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
+    profile = True
+
+    if profile:
+        import cProfile, pstats, io
+        pr = cProfile.Profile()
+        pr.enable()
+
+    rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
+    rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, 100, last_id)
+
+    all_clauses = {**rules_clauses, **rules_puzzle}
+
+    # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
+    knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
+
+    solver = Solver(knowledge_base)
+
+    solution, solved, split_statistics = solver.solve_instance()
+
+    print_sudoku(solution)
+    print_stats(split_statistics)
+    dimacs = to_dimacs_str(solution)
+
+    if profile:
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
 
 
 if __name__ == "__main__":
     # Default vars:
     program_version = 1
-    input_file = os.getcwd() + "/data/sudoku-example.txt"
+    input_file = os.getcwd() + "/data/sudoku-rules.txt"
 
     if len(sys.argv) == 3:
         option = sys.argv[1]
@@ -56,7 +83,8 @@ if __name__ == "__main__":
 
         input_file = sys.argv[2]
 
-    main(program_version, input_file)
+    # main(program_version, input_file)
+    develop(0, input_file, os.getcwd() + "/data/sudokus/1000sudokus.txt")
 
 
 # import cProfile, pstats, io

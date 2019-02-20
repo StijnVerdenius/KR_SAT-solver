@@ -1,9 +1,7 @@
+import itertools
 from typing import Tuple, List, Generator
 from solver.saver import Saver
 from solver.knowledge_base import KnowledgeBase
-
-
-
 
 
 class Solver:
@@ -12,9 +10,10 @@ class Solver:
         self.initial = knowledge_base
         self.saver = Saver("./temp/")
 
-    def solve_instance(self) -> Tuple[KnowledgeBase, bool]:
+    def solve_instance(self) -> Tuple[KnowledgeBase, bool, List]:
         """ main function for solving knowledge base """
-
+        split_statistics = []
+        
         # Check tautology (part of simplify, but only done once)
         self.initial.simplify_tautology()
 
@@ -25,22 +24,24 @@ class Solver:
 
             # get next entry from stack
             try:
-                current_state = next(stack)
-
+                current_state: KnowledgeBase = next(stack)
+                split_statistics.append(current_state.split_statistics())
                 # inform user of progress
                 print(f"\rLength solution: {len(current_state.current_set_literals)} out of {current_state.literal_counter}", end='')
             except StopIteration:
-                return current_state, False
+                return current_state, False, split_statistics
 
             # check for solution
             solved, _ = current_state.validate()
             if solved:
                 # found solution
                 print("\nSolved")
-                return current_state, True
+                return current_state, True, split_statistics
 
             # simplify
-            current_state.simplify()
+            valid = current_state.simplify()
+            if not valid:
+                continue
 
             # check again
             solved, _ = current_state.validate()
@@ -48,11 +49,12 @@ class Solver:
             if solved:
                 # found solution
                 print("\nSolved")
-                return current_state, True
+                return current_state, True, split_statistics
             else:
                 # split
                 future_states = self.possible_splits(current_state)
-                stack = self.concat(future_states, stack)
+                # stack = self.concat(future_states, stack)
+                stack = itertools.chain(future_states, stack)
 
     def possible_splits(self, current_state: KnowledgeBase) -> Generator[KnowledgeBase, None, None]:
         """
@@ -68,7 +70,6 @@ class Solver:
                 continue
 
             for choice in [True, False]:
-
                 new_state = self.saver.deepcopy_knowledge_base(current_state)
 
                 # do split
