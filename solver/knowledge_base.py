@@ -90,6 +90,7 @@ class KnowledgeBase:
         """
         simplifies knowledge base for unit clauses
         """
+        literals_set = 0
         for clause in list(self.clauses.values()):
 
             if len(clause.literals) != 1:
@@ -99,9 +100,13 @@ class KnowledgeBase:
 
             truth_value = literal > 0
             valid, potential_problem = self.set_literal(literal, truth_value)
+
+            literals_set += 1
             if not valid:
                 return valid, potential_problem
 
+        if literals_set > 0:
+            return self.simplify_unit_clauses()
         return True, 0
 
     def simplify_pure_literal(self):
@@ -140,7 +145,7 @@ class KnowledgeBase:
                 self.remove_clauses([clause])
                 removed += 1
 
-        print(f"Tautology simplify removed {removed} clauses")
+        # print(f"Tautology simplify removed {removed} clauses")
 
 
     def set_literal(self, literal: int, truth_value: bool) -> Tuple[bool, int]:
