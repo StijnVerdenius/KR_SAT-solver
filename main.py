@@ -46,7 +46,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         pr.enable()
 
     rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
-    rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, 100, last_id)
+    rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, 2, last_id)
 
     all_clauses = {**rules_clauses, **rules_puzzle}
 

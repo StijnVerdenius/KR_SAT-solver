@@ -29,3 +29,15 @@ def test_solver_case3():
     s = Solver(kb)
 
     res, solved = s.solve_instance()
+
+def test_solver_case4():
+    ls = [[1,4], [1,-3,-8], [1,8,12], [2,11], [-7,-3,9], [-7,8,-9], [7,8,-10], [7,10,-12]]
+    clauses = [Clause(i, l) for i, l in enumerate(ls)]
+    clauses = {clause.id: clause for clause in clauses}
+    kb = KnowledgeBase(clauses, clause_counter=len(clauses))
+    s = Solver(kb)
+
+    res, solved, _ = s.solve_instance()
+    print(res.current_set_literals)
+
+test_solver_case4()

@@ -4,6 +4,7 @@ except ImportError:
     raise RuntimeError("Please install _pickle")
 
 from solver.knowledge_base import KnowledgeBase
+from solver.dependency_graph import DependencyGraph
 
 class Saver():
 
@@ -31,12 +32,22 @@ class Saver():
     def personal_deepcopy(self, obj):
         return pickle.loads(pickle.dumps(obj, protocol=-1))
 
-    def deepcopy_knowledge_base(self, base : KnowledgeBase):
+    def deepcopy_knowledge_base(self, base : KnowledgeBase, step : int):
 
         clauses_ = self.personal_deepcopy(base.clauses)
-        # set_literals_ = {key: base.current_set_literals[key] for key in base.current_set_literals}
         set_literals_ = self.personal_deepcopy(base.current_set_literals)
         bookkeeping_ = self.personal_deepcopy(base.bookkeeping)
 
-        return KnowledgeBase(clauses=clauses_, current_set_literals= set_literals_, bookkeeping=bookkeeping_, clause_counter= base.clause_counter, literal_counter= base.literal_counter)
+        # dependency graph stuff
+        initial_ = self.personal_deepcopy(base.dependency_graph.initial_coocurrence)
+        graph_ = self.personal_deepcopy(base.dependency_graph.graph)
+        dependency_graph_ = DependencyGraph(initial=initial_, graph=graph_, existing_literals=list(set_literals_.keys()))
+
+        return KnowledgeBase(clauses=clauses_,
+                             current_set_literals= set_literals_,
+                             bookkeeping=bookkeeping_,
+                             clause_counter= base.clause_counter,
+                             literal_counter= base.literal_counter,
+                             dependency_graph=dependency_graph_,
+                             timestep=step)
 

@@ -2,13 +2,21 @@ import itertools
 from typing import Tuple, List, Generator
 from solver.saver import Saver
 from solver.knowledge_base import KnowledgeBase
+from collections import deque, defaultdict
+try:
+    import numpy as np
+except ImportError:
+    raise RuntimeError("Please install numpy")
 
 
 class Solver:
 
-    def __init__(self, knowledge_base):
+    def __init__(self, knowledge_base : KnowledgeBase):
         self.initial = knowledge_base
         self.saver = Saver("./temp/")
+        self.problem_clauses = defaultdict(set)
+        self.timestep = 0
+        self.clause_counter = self.initial.clause_counter
 
     def solve_instance(self) -> Tuple[KnowledgeBase, bool, List]:
         """ main function for solving knowledge base """
@@ -26,8 +34,18 @@ class Solver:
             try:
                 current_state: KnowledgeBase = next(stack)
                 split_statistics.append(current_state.split_statistics())
+                valid = True
+                for key in self.problem_clauses:
+
+                    if (key >= current_state.timestep):
+                        valid = current_state.add_clauses(self.problem_clauses[key])
+
+                        if (not valid): break
+
+                if (not valid): continue
+
                 # inform user of progress
-                print(f"\rLength solution: {len(current_state.current_set_literals)} out of {current_state.literal_counter}", end='')
+                print(f"\rLength solution: {len(current_state.current_set_literals)} out of {current_state.literal_counter}, clauses left: {len(current_state.clauses)}", end='')
             except StopIteration:
                 return current_state, False, split_statistics
 
@@ -39,8 +57,11 @@ class Solver:
                 return current_state, True, split_statistics
 
             # simplify
-            valid = current_state.simplify()
+            valid, potential_problem = current_state.simplify()
             if not valid:
+                self.clause_counter += 1
+                problem_clause = current_state.dependency_graph.find_conflict_clause(potential_problem, self.clause_counter)
+                self.problem_clauses[current_state.timestep].add(problem_clause)
                 continue
 
             # check again
@@ -64,19 +85,28 @@ class Solver:
         :return:
         """
 
+        self.timestep += 1
+
         for literal in list(current_state.bookkeeping.keys()):
 
             if literal in current_state.current_set_literals:
                 continue
 
-            for choice in [True, False]:
-                new_state = self.saver.deepcopy_knowledge_base(current_state)
+            for choice in [False, True]:
+
+                new_state = self.saver.deepcopy_knowledge_base(current_state, self.timestep)
 
                 # do split
-                valid = new_state.set_literal(literal, choice)
+                valid, potential_problem = new_state.set_literal(literal, choice)
 
                 if not valid:
+
+                    self.clause_counter += 1
+
                     # Reached non-valid state, thus leaf-node
+                    problem_clause = new_state.dependency_graph.find_conflict_clause(potential_problem,
+                                                                                self.clause_counter)
+                    self.problem_clauses[new_state.timestep].add(problem_clause)
                     continue
 
                 yield new_state
@@ -91,6 +121,4 @@ class Solver:
 
         yield from a
         yield from b
-
-
 
