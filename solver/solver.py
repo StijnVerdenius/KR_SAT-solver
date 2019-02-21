@@ -31,9 +31,9 @@ class Solver:
                 split_statistics.append(current_state.split_statistics())
                 # inform user of progress
 
-                runtime = timeit.default_timer() - start
 
                 if count % 25 == 0:
+                    runtime = timeit.default_timer() - start
                     count = 1
                     print(f"\rLength solution: {len(current_state.current_set_literals)} out of {current_state.literal_counter} runtime: {runtime}", end='')
             except StopIteration:
