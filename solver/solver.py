@@ -2,6 +2,7 @@ import itertools
 from typing import Tuple, List, Generator
 from solver.saver import Saver
 from solver.knowledge_base import KnowledgeBase
+import timeit
 
 
 class Solver:
@@ -13,21 +14,28 @@ class Solver:
     def solve_instance(self) -> Tuple[KnowledgeBase, bool, List]:
         """ main function for solving knowledge base """
         split_statistics = []
+        start = timeit.default_timer()
         
         # Check tautology (part of simplify, but only done once)
         self.initial.simplify_tautology()
 
         stack = iter([self.initial])
         solved = False
+        count = 0
 
         while (not solved):
-
+            count += 1
             # get next entry from stack
             try:
                 current_state: KnowledgeBase = next(stack)
                 split_statistics.append(current_state.split_statistics())
                 # inform user of progress
-                print(f"\rLength solution: {len(current_state.current_set_literals)} out of {current_state.literal_counter}", end='')
+
+                runtime = timeit.default_timer() - start
+
+                if count % 25 == 0:
+                    count = 1
+                    print(f"\rLength solution: {len(current_state.current_set_literals)} out of {current_state.literal_counter} runtime: {runtime}", end='')
             except StopIteration:
                 return current_state, False, split_statistics
 
@@ -64,8 +72,7 @@ class Solver:
         :return:
         """
 
-        for literal in list(current_state.bookkeeping.keys()):
-
+        for literal in current_state.bookkeeping.keys():
             if literal in current_state.current_set_literals:
                 continue
 

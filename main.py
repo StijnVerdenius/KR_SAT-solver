@@ -1,12 +1,13 @@
 import sys
 import os
+import cProfile, pstats, io
 
 from solver.dimacs_write import to_dimacs_str
 from solver.knowledge_base import KnowledgeBase
 from solver.read import read_rules_dimacs as read_rules
 from solver.read import read_text_sudoku as read_problem
 from solver.solver import *
-from solver.stats import print_stats
+from solver.stats import print_stats, show_stats
 from solver.visualizer import print_sudoku
 
 """
@@ -38,28 +39,36 @@ def main(program_version: int, rules_dimacs_file_path: str):
 
 
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
-    profile = True
+    profile = False
 
     if profile:
-        import cProfile, pstats, io
         pr = cProfile.Profile()
         pr.enable()
 
-    rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
-    rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, 100, last_id)
+    problems = range(0, 1000)
+    problems = range(0, 3)
+    sudokus_stats = []
+    for problem_id in problems:
 
-    all_clauses = {**rules_clauses, **rules_puzzle}
+        print(f"Solving problem {problem_id}")
+        rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
+        rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
 
-    # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
-    knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
+        all_clauses = {**rules_clauses, **rules_puzzle}
 
-    solver = Solver(knowledge_base)
+        # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
+        knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
+        solver = Solver(knowledge_base)
 
-    solution, solved, split_statistics = solver.solve_instance()
+        solution, solved, split_statistics = solver.solve_instance()
 
-    print_sudoku(solution)
-    print_stats(split_statistics)
-    dimacs = to_dimacs_str(solution)
+        sudokus_stats.append(split_statistics)
+
+        # print_sudoku(solution)
+        # print_stats(split_statistics)
+        dimacs = to_dimacs_str(solution)
+
+    show_stats(sudokus_stats)
 
     if profile:
         pr.disable()
