@@ -1,7 +1,9 @@
 from collections import defaultdict, namedtuple
 from typing import List, Dict, Set, Tuple
+
 from solver.clause import Clause
 
+Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
 
 class KnowledgeBase:
     """
@@ -167,9 +169,9 @@ class KnowledgeBase:
 
                 # Remove empty and satisfied clauses
                 if -abs_literal in clause.literals:
-                    clause.literals.remove(-abs_literal)
+                    clause.remove_literal(-abs_literal)
                 if abs_literal in clause.literals:
-                    clause.literals.remove(abs_literal)
+                    clause.remove_literal(abs_literal)
 
 
         if abs_literal in self.bookkeeping:
@@ -204,6 +206,5 @@ class KnowledgeBase:
         return self.__str__()
 
     def split_statistics(self):
-        Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
 
         return Split(len(self.bookkeeping.keys()), len(self.clauses))

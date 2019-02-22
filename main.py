@@ -1,6 +1,7 @@
 import sys
 import os
 import cProfile, pstats, io
+from multiprocessing import Pool
 
 from solver.dimacs_write import to_dimacs_str
 from solver.knowledge_base import KnowledgeBase
@@ -39,14 +40,19 @@ def main(program_version: int, rules_dimacs_file_path: str):
 
 
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
-    profile = False
+    profile = True
 
     if profile:
         pr = cProfile.Profile()
         pr.enable()
 
-    problems = range(0, 1000)
-    problems = range(0, 3)
+    problems = range(0, 24)
+    # problems = range(0, 10)
+
+    # p = Pool(12)
+    # results = p.map(solve_sudoku, problems)
+    # sudokus_stats = list(filter(lambda x: x is not None, results))
+
     sudokus_stats = []
     for problem_id in problems:
 
@@ -60,11 +66,15 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
         solver = Solver(knowledge_base)
 
-        solution, solved, split_statistics = solver.solve_instance()
+        try:
+            solution, solved, split_statistics = solver.solve_instance()
+        except RunningTimeException as e:
+            print(e)
+            continue
 
-        sudokus_stats.append(split_statistics)
+        sudokus_stats.append((split_statistics, problem_id))
 
-        # print_sudoku(solution)
+        print_sudoku(solution)
         # print_stats(split_statistics)
         dimacs = to_dimacs_str(solution)
 
@@ -77,6 +87,33 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
         ps.print_stats()
         print(s.getvalue())
+
+def solve_sudoku(problem_id):
+    print(f"Solving problem {problem_id}")
+    problem_path = os.getcwd() + "/data/sudokus/1000sudokus.txt"
+    rules_dimacs_file_path = os.getcwd() + "/data/sudoku-rules.txt"
+    rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
+    rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
+
+    all_clauses = {**rules_clauses, **rules_puzzle}
+
+    # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
+    knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
+    solver = Solver(knowledge_base)
+
+    try:
+        solution, solved, split_statistics = solver.solve_instance()
+    except RunningTimeException as e:
+        print(e)
+        return None
+
+    # sudokus_stats.append((split_statistics, problem_id))
+
+    print_sudoku(solution)
+    # print_stats(split_statistics)
+    dimacs = to_dimacs_str(solution)
+
+    return (split_statistics, problem_id)
 
 
 if __name__ == "__main__":

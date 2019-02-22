@@ -13,7 +13,7 @@ class Clause(object):
 
     def __init__(self, id, literals):
         self.id = id
-        self.literals = set(literals)
+        self.literals = frozenset(literals)
 
     def __len__(self):
         return len(self.literals)
@@ -38,6 +38,9 @@ class Clause(object):
                 return True, False
 
         return False, False
+
+    def remove_literal(self, literal):
+        self.literals = self.literals - frozenset([literal])
 
     def __str__(self):
         return str(self.literals)
