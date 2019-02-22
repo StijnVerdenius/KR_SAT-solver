@@ -46,8 +46,9 @@ class Solver:
                 runtime = timeit.default_timer() - start
                 if runtime > 30:
                     raise RunningTimeException(f"!!! SKIPPING SUDOKU. Time is out, runtime:{runtime} !!!")
+                    pass
 
-                if count % 10 == 0:
+                if count % 1 == 0:
                     count = 1
                     print(f"\rLength solution: {len(current_state.current_set_literals)} out of {current_state.literal_counter} runtime: {runtime}", end='')
             except StopIteration:
@@ -75,11 +76,11 @@ class Solver:
                 return current_state, True, split_statistics
             else:
                 # split
-                future_states = self.possible_splits(current_state, None)
+                future_states = self.possible_splits(current_state)
                 # stack = self.concat(future_states, stack)
                 stack = itertools.chain(future_states, stack)
 
-    def possible_splits(self, current_state: KnowledgeBase, set_literals: set) -> Generator[KnowledgeBase, None, None]:
+    def possible_splits(self, current_state: KnowledgeBase) -> Generator[KnowledgeBase, None, None]:
         """
         Generator for possible splits given a current knowledge base and its current truth value assignments
 
@@ -87,13 +88,11 @@ class Solver:
         :return:
         """
         set_literals = set()
-
-        iterator = self.look_ahead(current_state, set_literals)
-        new_state = self.saver.deepcopy_knowledge_base(current_state)
+        iterator = self.look_ahead(current_state)
 
         for literal, choice in iterator:
             if literal is None:
-                solved, _ = new_state.validate()
+                solved, _ = current_state.validate()
                 if solved:
                     raise Exception("LoL")
                 # print("Returning")
@@ -112,20 +111,17 @@ class Solver:
 
             yield new_state
 
-        set_literals.add(literal)
-        yield from self.possible_splits(current_state, set_literals)
-
-    def look_ahead(self, current_state, not_allowed_literals):
+    def look_ahead(self, current_state):
         heuristic = {}
         f = current_state
-        for literal in self.preselect(current_state, not_allowed_literals):
+        for literal in self.preselect(current_state):
             fprime = self.saver.deepcopy_knowledge_base(current_state)
             valid1 = fprime.set_literal(literal, False)
             if valid1:
                 valid1 = fprime.simplify()
 
             if valid1 and self.nr_of_binary_clauses(fprime) - 65 > self.nr_of_binary_clauses(f):
-                fprime, valid1 = self.double_look(fprime, not_allowed_literals)
+                fprime, valid1 = self.double_look(fprime)
 
             fdprime = self.saver.deepcopy_knowledge_base(current_state)
             valid2 = fdprime.set_literal(literal, True)
@@ -133,7 +129,7 @@ class Solver:
                 valid2 = fdprime.simplify()
 
             if valid2 and self.nr_of_binary_clauses(fdprime) - 65 > self.nr_of_binary_clauses(f):
-                fdprime, valid2 = self.double_look(fdprime, not_allowed_literals)
+                fdprime, valid2 = self.double_look(fdprime)
 
             if not valid1 and not valid2:
                 return [(None, None),]
@@ -157,11 +153,11 @@ class Solver:
         # Return highest value in heuristic
         if len(heuristic) == 0:
             # print(f"Restarting look ahead!!!!")
-            count_dict = defaultdict(int)
-            for clause in current_state.clauses.values():
-                count_dict[len(clause)] += 1
-
-            print(count_dict)
+            # count_dict = defaultdict(int)
+            # for clause in current_state.clauses.values():
+            #     count_dict[len(clause)] += 1
+            #
+            # print(count_dict)
             return [(None, None),]
             # self.look_ahead(current_state)
 
@@ -171,9 +167,9 @@ class Solver:
         else:
             return [(literal, False), (literal, True)]
 
-    def double_look(self, current_state, not_allowed_literals):
+    def double_look(self, current_state):
         f = current_state
-        for literal in self.preselect(current_state, not_allowed_literals):
+        for literal in self.preselect(current_state):
             fprime = self.saver.deepcopy_knowledge_base(current_state)
             valid1 = fprime.set_literal(literal, False)
             if valid1:
@@ -230,21 +226,19 @@ class Solver:
 
         return heuristic
 
-    def preselect(self, current_state, not_allowed_literals, mu=5, gamma=7):
+    def preselect(self, current_state, mu=5, gamma=7):
         items = 0
         n = self.nr_of_splits
         n = max(1, n)
         max_items = int(mu + (gamma / n) + self.failed_literals)
         all_lits = list(current_state.bookkeeping.items())
-        print(f"Max items: {max_items}, failed_literals: {self.failed_literals}, total_lits:{len(current_state.bookkeeping.keys())}, nr_of_splits:{self.nr_of_splits}")
-        allowed_lits = list(set(current_state.bookkeeping.keys()) - not_allowed_literals)
-        random.shuffle(allowed_lits)
+
+        # print(f"Max items: {max_items}, failed_literals: {self.failed_literals}, total_lits:, nr_of_splits:{self.nr_of_splits}")
+        # allowed_lits = list(set(current_state.bookkeeping.keys()))
+        # random.shuffle(allowed_lits)
         # for literal in allowed_lits:
         for literal, _ in sorted(all_lits, key=lambda kv: len(kv[1])):
             if literal in current_state.current_set_literals:
-                continue
-
-            if literal in not_allowed_literals:
                 continue
 
             yield literal

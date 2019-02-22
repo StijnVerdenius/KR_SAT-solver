@@ -46,8 +46,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         pr = cProfile.Profile()
         pr.enable()
 
-    problems = range(0, 24)
-    # problems = range(0, 10)
+    problems = range(0, 1)
 
     # p = Pool(12)
     # results = p.map(solve_sudoku, problems)
@@ -131,18 +130,3 @@ if __name__ == "__main__":
 
     # main(program_version, input_file)
     develop(0, input_file, os.getcwd() + "/data/sudokus/1000sudokus.txt")
-
-
-# import cProfile, pstats, io
-# pr = cProfile.Profile()
-# pr.enable()
-#
-# for x in range(10000):
-#     test_solver_case3()
-#
-# pr.disable()
-# s = io.StringIO()
-# sortby = 'cumulative'
-# ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-# ps.print_stats()
-# print(s.getvalue())

@@ -206,5 +206,4 @@ class KnowledgeBase:
         return self.__str__()
 
     def split_statistics(self):
-
         return Split(len(self.bookkeeping.keys()), len(self.clauses))
