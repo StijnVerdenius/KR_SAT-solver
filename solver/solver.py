@@ -151,17 +151,14 @@ class Solver:
             # find state values
             # Find the first literal in the order that has a state in the stack
             for last_literal in reversed(self.order):
-                truth_assignment = random.choice([True, False]) # todo: hearistiek ipv random
+                 # todo: hearistiek ipv random
                 if last_literal in self.stack:
                     break
 
-            # print("last literal stack")
-            # print(self.currently_conflict_mode)
-            # print(self.problem_clauses)
-            # print(type(self.stack[last_literal][True]))
-            # print(type(self.stack[last_literal][False]))
+            truth_assignment = random.choice([True, False])
+
             # find state
-            state = self.stack[last_literal].pop(truth_assignment)
+            state = self.stack[last_literal][truth_assignment]
 
             if (state is None):
                 raise Exception("None-state")
@@ -171,6 +168,8 @@ class Solver:
             self.add_problem_clauses_to_state(state)
 
             return state
+
+        print("Entered backtrack")
 
         # backtrack
         # reset conflict mode
@@ -187,7 +186,7 @@ class Solver:
         random.shuffle(possible_assignments)
         for truth_assignment in possible_assignments:
             if truth_assignment in self.stack[literal]:
-                state = self.stack[literal].pop(truth_assignment)
+                state = self.stack[literal][truth_assignment]
                 break
 
         self.add_problem_clauses_to_state(state)
@@ -205,25 +204,20 @@ class Solver:
 
     def lookup_backtrack_literal(self, problem_clause):
         for order_index, literal in enumerate(self.order):
-            if literal in problem_clause.literals:
+            if literal == "init":
+                continue
+            if abs(literal) in problem_clause.literals:
                 if literal in self.stack:
-                    print("Literal found", literal)
                     return literal, order_index
 
                 for order_index in range(order_index, 0, -1):
                     if order_index in self.stack:
                         literal = order_index
-                        print("Back-lookup literal found", literal)
                         return literal, order_index
 
-        print("Problem clause Literals", problem_clause.literals)
-        print("Stack", list(self.stack.keys()))
-        print("Order", self.order)
         raise Exception("Ja gvd")
 
     def add_problem_clauses_to_state(self, state):
-        print(f"Stack length {len(self.stack)}")
-        print("Adding problem clauses:", self.problem_clauses)
         valid = state.add_clauses(self.saver.personal_deepcopy(self.problem_clauses))
         if (not valid):
             raise Exception("Adding clauses led to invalid addition")
