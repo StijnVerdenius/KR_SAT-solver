@@ -4,28 +4,25 @@ from solver.saver import Saver
 from solver.knowledge_base import KnowledgeBase
 from solver.clause import Clause
 from collections import deque, defaultdict
+import random
 try:
     import numpy as np
 except ImportError:
     raise RuntimeError("Please install numpy")
 import timeit
 
-TEMPKEY= "TEMPKEY"
-
 class Solver:
 
     def __init__(self, knowledge_base : KnowledgeBase):
         self.initial = knowledge_base
         self.saver = Saver("./temp/")
-        self.problem_clauses = defaultdict(set)
         self.timestep = 0
         self.clause_counter = self.initial.clause_counter
 
-        self.state_dict: Dict[int: KnowledgeBase] = {}
         self.currently_conflict_mode = False
-        self.order = []
-        self.stack = iter([self.saver.deepcopy_knowledge_base(self.initial, 0)])
-        self.last_conflict_literals : Clause = None
+        self.problem_clauses = []
+        self.order = ["init"]
+        self.stack = {}
 
     def solve_instance(self) -> Tuple[KnowledgeBase, bool, List]:
         """ main function for solving knowledge base """
@@ -38,26 +35,20 @@ class Solver:
         solved = False
         count = 0
 
+        # to retrieve initial value on start
+        current_state = self.saver.deepcopy_knowledge_base(self.initial, 0)
+        self.stack["init"] = {True : current_state, False: current_state}
+
         while (not solved):
+
             count += 1
+
             # get next entry from stack
-            try:
-                current_state : KnowledgeBase = self.get_next_state()
+            current_state : KnowledgeBase = self.get_next_state()
 
-                split_statistics.append(current_state.split_statistics())
-
-                # inform user of progress
-                if count % 25 == 0:
-                    runtime = timeit.default_timer() - start
-                    count = 1
-                    print(f"\rLength solution: {len(current_state.current_set_literals)} out of"
-                          f" {current_state.literal_counter}, runtime: {runtime}, number of clauses: "
-                          f"{len(current_state.clauses)}", end='')
-            except StopIteration:
-                return current_state, False, split_statistics
-
-
-            self.state_dict[TEMPKEY] = self.saver.deepcopy_knowledge_base(current_state, self.timestep)
+            # user & statistics
+            count = self.inform_user(current_state, count, start)
+            split_statistics.append(current_state.split_statistics())
 
             # check for solution
             solved, _ = current_state.validate()
@@ -66,20 +57,23 @@ class Solver:
                 print("\nSolved")
                 return current_state, True, split_statistics
 
+            # find set literals before
+            before = tuple(current_state.current_set_literals.keys())
+
             # simplify
             valid, potential_problem = current_state.simplify()
-            before = self.state_dict[TEMPKEY].current_set_literals.keys()
-            after = current_state.current_set_literals.keys()
+
+            # find set literals after
+            after = tuple(current_state.current_set_literals.keys())
+
+            # add difference to order
             difference = [literal for literal in after if literal not in before]
             for literal in difference:
                 self.order.append(literal)
-                self.state_dict[literal] = self.state_dict[TEMPKEY]
+                # todo: ook toevoegen aan stack met simplify-literal refererend naar de voorgaande split-literal ??
+
             if not valid:
-                self.clause_counter += 1
-                problem_clause = current_state.dependency_graph.find_conflict_clause(potential_problem, self.clause_counter)
-                self.problem_clauses[current_state.timestep].add(problem_clause)
-                self.last_conflict_literals = problem_clause
-                self.currently_conflict_mode = True
+                self.retrieve_problem_clause(current_state, potential_problem)
                 continue
 
             # check again
@@ -91,10 +85,24 @@ class Solver:
                 return current_state, True, split_statistics
             else:
                 # split
-                future_states = self.possible_splits(current_state)
-                self.stack = itertools.chain(future_states, self.stack)
+                future_states, literal = self.expand_tree_by_split(current_state)
+                self.stack[literal] = future_states
 
-    def possible_splits(self, current_state: KnowledgeBase) -> Generator[KnowledgeBase, None, None]:
+    def retrieve_problem_clause(self, state, literal):
+
+        # up counter
+        self.clause_counter += 1
+
+        # get clause
+        problem_clause = state.dependency_graph.find_conflict_clause(literal, self.clause_counter)
+
+        # add
+        self.problem_clauses[state.timestep].add(problem_clause)
+
+        # trigger a backtrack
+        self.currently_conflict_mode = True
+
+    def expand_tree_by_split(self, current_state: KnowledgeBase) -> Tuple[Dict[bool, KnowledgeBase], int]:
         """
         Generator for possible splits given a current knowledge base and its current truth value assignments
 
@@ -102,103 +110,95 @@ class Solver:
         :return:
         """
 
+        # init with none
+        new_states = {True : None, False : None}
+
         self.timestep += 1
 
-        local_timestep = self.timestep
+        # choose a literal todo: heuristiek ipv random
+        literal = random.choice(current_state.bookkeeping.keys())
+        while literal in current_state.current_set_literals:
+            literal = random.choice(current_state.bookkeeping.keys())
 
-        for literal in current_state.bookkeeping.keys():
+        # add literal to order
+        self.order.append(literal)
 
-            if literal in current_state.current_set_literals:
+        for truth_assignment in [False, True]:
+
+            new_state = self.saver.deepcopy_knowledge_base(current_state, self.timestep)
+
+            # do split
+            valid, potential_problem = new_state.set_literal(literal, truth_assignment)
+
+            if not valid:
+
+                self.retrieve_problem_clause(new_state, literal)
+
                 continue
 
-            for choice in [False, True]:
+            else:
 
-                new_state = self.saver.deepcopy_knowledge_base(current_state, local_timestep)
+                # problem free
+                new_states[truth_assignment] = new_state
 
-                self.state_dict[literal] = self.saver.deepcopy_knowledge_base(new_state, local_timestep)
-
-                # do split
-                valid, potential_problem = new_state.set_literal(literal, choice)
-
-                self.order.append(literal)
-
-                if not valid:
-
-                    self.clause_counter += 1
-
-                    # Reached non-valid state, thus leaf-node
-                    problem_clause = new_state.dependency_graph.find_conflict_clause(potential_problem,
-                                                                                self.clause_counter)
-                    self.problem_clauses[new_state.timestep].add(problem_clause)
-
-                    self.order = self.order[:-1]
-                    del self.state_dict[literal]
-
-                    self.last_conflict_literals = problem_clause
-                    self.currently_conflict_mode = True
-
-                    continue
-
-                else:
-
-                    # self.state_dict[]
-
-                    yield new_state
+        return new_states
 
     def get_next_state(self) -> KnowledgeBase:
-        state = None
+
+        # if not in error mode: depth first state expansion
         if (not self.currently_conflict_mode):
-            state = next(self.stack)
-            while (state is None):
-                state = next(self.stack)
-        else:
+
+            # find state values
+            literal = self.order[-1]
+            truth_assignment = random.choice([True, False]) # todo: hearistiek ipv random
+
+            # find state
+            state = self.stack[literal].pop(truth_assignment)
+
+            if (state is None):
+                raise Exception("None-state")
+                # todo: dit betekent dat in split een fout gaf voor 1 van de twee states en die het somehow overleeft heeft, wat hieraan te doen?
+
+            # add problem clauses
+            self.add_problem_clauses_to_state(state)
+
+            return state
+
+        else: # backtrack
+
+
+            # reset conflict mode
             self.currently_conflict_mode = False
-            last_literals = [abs(lit) for lit in self.last_conflict_literals.literals]
-            indices = [self.order.index(lit) for lit in last_literals]
-            earliest = last_literals[int(np.argmin(indices))]
-            state: KnowledgeBase = self.state_dict[earliest]
 
-            valid, _ = state.set_literal(earliest, earliest in self.last_conflict_literals.literals)
+            # find relevant problem clause
+            problem_clause = self.problem_clauses[-1]
 
-            cutoff = self.order.index(earliest)
-            deletables = self.order[cutoff:]
-            self.order = self.order[:cutoff]
-            for deletable in deletables:
-                del self.state_dict[deletable]
+            # todo: find earliest literal from problem clause in self.order
 
-        valid = True
-        for key in self.problem_clauses:
+            # todo: find corresponding state in stack
+            state = None
 
-           # if (key >= state.timestep):
-           valid = state.add_clauses(self.problem_clauses[key])
+            self.add_problem_clauses_to_state(state)
 
-           if (not valid): break
+            # todo: remove literals that came after from self.order
 
+            # todo: remove literals that came after from self.stack
+
+            return state
+
+    def add_problem_clauses_to_state(self, state):
+        valid = state.add_clauses(self.saver.personal_deepcopy(self.problem_clauses))
         if (not valid):
-           raise Exception("adding clauses led to invalid addition")
-
-        return state
+            raise Exception("Adding clauses led to invalid addition")
 
 
+    def inform_user(self, state : KnowledgeBase, count, start):
+        # inform user of progress
+        if count % 25 == 0:
+            runtime = timeit.default_timer() - start
+            count = 1
+            print(f"\rLength solution: {len(state.current_set_literals)} out of"
+                  f" {state.literal_counter}, runtime: {runtime}, number of clauses: "
+                  f"{len(state.clauses)}", end='')
 
-
- # # find state
- #            self.currently_conflict_mode = False
- #            indices = [self.order.index(lit) for lit in self.last_conflict_literals]
- #            earliest = self.last_conflict_literals[int(np.argmin(indices))]
- #            timestep = self.descisions[earliest] -1
- #            state: KnowledgeBase = self.state_dict[timestep]
- #
- #
- #
- #            # switch value
- #            valid, _ = state.set_literal(earliest, not self.state_dict[timestep + 1].current_set_literals[earliest])
- #            if (not valid):
- #                raise Exception(f"Both true and false for literal {earliest} give an inconsistency")
- #
- #            # delete whats needed
- #            ind = self.order.index(earliest)+1
- #            deletables = self.order[ind:]
- #            self.order = self.order[:ind]
- #            for deletable in deletables:
- #                del self.descisions[deletable]
+        return count

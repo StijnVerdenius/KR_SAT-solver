@@ -108,6 +108,8 @@ class KnowledgeBase:
             if not valid:
                 return valid, potential_problem
 
+        if (literals_set > 0):
+            return self.simplify_unit_clauses()
 
         return True, literals_set
 
@@ -260,6 +262,7 @@ class KnowledgeBase:
             # is literal already set
             abs_literal = abs(literal)
             if (abs_literal in self.current_set_literals):
+
                 truth = self.current_set_literals[abs_literal]
 
                 # is it already statiusfied?

@@ -29,12 +29,12 @@ class DependencyGraph:
             self.existing_literals = existing_literals
 
 
-    def add_literal(self, literal):
+    def add_literal(self, literal): # todo: toevoegen van boolean flag die kijkt of het een split of simplify actie is
 
         cooccuring = self.initial_coocurrence[literal]
         for cooc_literal in cooccuring:
             if (abs(cooc_literal) in self.existing_literals):
-                self.graph[literal].add(-cooc_literal)
+                self.graph[literal].add(-cooc_literal) # todo: checken of dit klopt
 
         self.existing_literals.append(literal)
 
@@ -42,7 +42,4 @@ class DependencyGraph:
 
         return Clause(id, self.graph[literal])
 
-    def find_backtrack_node(self, literal):
 
-        for literal in self.graph[literal]:
-            pass
