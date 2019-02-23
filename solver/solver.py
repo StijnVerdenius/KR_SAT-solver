@@ -319,7 +319,7 @@ class Solver:
             if items == max_items and self.nr_of_splits > 1:
                 break
 
-        def diff(self, state, new_state):
+    def diff(self, state, new_state):
         # Clause reduction heuristic
         gammas = {2: 1, 3: 0.2, 4: 0.05, 5: 0.01, 6: 0.003}
         for k in range(7, 10):
@@ -335,24 +335,6 @@ class Solver:
             count_dict_new_state[len(clause)] += 1
 
         heuristic = sum(abs(count_dict_new_state[k] - count_dict_state[k]) * gammas[k] for k in range(2, 10))
-
-        # all_lits = [clause.literals for clause in state.clauses.values()]
-        # for clause in new_state.clauses.values():
-        #     if clause.literals in all_lits:
-        #         k = len(clause.literals)
-        #         if k in gammas:
-        #             gamma = gammas[k]
-        #         else:
-        #             gamma = 20.4514 * 0.218673 ** k
-        #
-        #         sum += gamma * 1
-
-        # nr_clauses = sum((1 for clause in state.clauses.values() if len(clause.literals) == 2))
-        # nr_clauses_other = sum((1 for clause in new_state.clauses.values() if len(clause.literals) == 2))
-
-        # nr_clauses = len(state.clauses)
-        # nr_clauses_other = len(new_state.clauses)
-        # heur = nr_clauses_other - nr_clauses
 
         return heuristic
 
@@ -415,18 +397,10 @@ class Solver:
                     diff_f_prime,
                 )
 
-        # print(heuristic)
-        # print(f"Heuristic len: {len(heuristic)}")
+        print(f"Heuristic len: {len(heuristic)}")
         # Return highest value in heuristic
         if len(heuristic) == 0:
-            # print(f"Restarting look ahead!!!!")
-            # count_dict = defaultdict(int)
-            # for clause in current_state.clauses.values():
-            #     count_dict[len(clause)] += 1
-            #
-            # print(count_dict)
             return [(None, None),]
-            # self.look_ahead(current_state)
 
         literal, heuristic_vals = max(heuristic.items(), key=lambda kv: kv[1][0])
         if heuristic_vals[1] > heuristic_vals[2]:

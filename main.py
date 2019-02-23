@@ -41,17 +41,19 @@ def main(program_version: int, rules_dimacs_file_path: str):
 
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
     profile = False
+    multiprocessing = False
 
     if profile:
         pr = cProfile.Profile()
         pr.enable()
 
-    problems = range(0, 1)
+    problems = range(0, 5)
 
-
-    # p = Pool(12)
-    # results = p.map(solve_sudoku, problems)
-    # sudokus_stats = list(filter(lambda x: x is not None, results))
+    if multiprocessing:
+        p = Pool(12)
+        results = p.map(solve_sudoku, problems)
+        sudokus_stats = list(filter(lambda x: x is not None, results))
+        return
 
     sudokus_stats = []
     for problem_id in problems:
