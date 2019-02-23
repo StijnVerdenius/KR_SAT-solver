@@ -29,19 +29,15 @@ class DependencyGraph:
         else:
             self.existing_literals = existing_literals
 
-    def add_literal(self, literal, split=False): # todo: toevoegen van boolean flag die kijkt of het een split of simplify actie is
+    def add_literal(self, literal, split=False):
 
         if (not split):
             cooccuring = self.initial_coocurrence[literal]
             for cooc_literal in cooccuring:
                 if (abs(cooc_literal) in self.existing_literals):
-                    self.graph[literal].add(cooc_literal) # todo: checken of dit klopt
-
+                    self.graph[literal].add(cooc_literal)
         self.existing_literals.append(literal)
-
 
     def find_conflict_clause(self, literal, id):
 
         return Clause(id, self.graph[literal])
-
-

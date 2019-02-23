@@ -64,35 +64,30 @@ class KnowledgeBase:
         self.timestep = timestep
 
 
-    def validate(self) -> Tuple[bool, bool]:
+    def validate(self) -> bool:
         """
         Determine whether the current knowledge base is solved.
         :return:
         """
-        for clause in self.clauses.values():
-            solved, _ = clause.validate(self.current_set_literals)
-            if not solved:
-                return solved, False
+        return len(self.clauses) < 1
 
-        return True, False
-
-    def simplify(self) -> Tuple[bool, int]:
+    def simplify(self, set_literals) -> Tuple[bool, int]:
         """
         removes redundant information from knowledge base
         """
-        valid, potential_problem_potential_literals_set1 = self.simplify_unit_clauses()
+        valid, potential_problem_potential_literals_set1 = self.simplify_unit_clauses(set_literals)
         if not valid:
             return valid, potential_problem_potential_literals_set1
-        valid, potential_problem_potential_literals_set2 = self.simplify_pure_literal()
+        valid, potential_problem_potential_literals_set2 = self.simplify_pure_literal(set_literals)
         if not valid:
             return valid, potential_problem_potential_literals_set2
 
         if sum([potential_problem_potential_literals_set1, potential_problem_potential_literals_set2]) > 0:
-            return self.simplify()
+            return self.simplify(set_literals)
 
         return True, 0
 
-    def simplify_unit_clauses(self) -> Tuple[bool, int]:
+    def simplify_unit_clauses(self, set_literals) -> Tuple[bool, int]:
         """
         simplifies knowledge base for unit clauses
         """
@@ -105,6 +100,7 @@ class KnowledgeBase:
             literal = clause.first()
 
             truth_value = literal > 0
+            set_literals.append(literal)
             valid, potential_problem = self.set_literal(literal, truth_value)
 
             literals_set += 1
@@ -112,11 +108,11 @@ class KnowledgeBase:
                 return valid, potential_problem
 
         if (literals_set > 0):
-            return self.simplify_unit_clauses()
+            return self.simplify_unit_clauses(set_literals)
 
         return True, literals_set
 
-    def simplify_pure_literal(self) -> Tuple[bool, int]:
+    def simplify_pure_literal(self, set_literals) -> Tuple[bool, int]:
         """
         simplifies knowledge base for pure literals
         """
@@ -136,6 +132,7 @@ class KnowledgeBase:
 
             if len(attempt) == 1:
                 value = attempt.pop()
+                set_literals.append(literal)
                 valid, potential_problem = self.set_literal(literal, value)
                 if not valid:
                     return valid, potential_problem

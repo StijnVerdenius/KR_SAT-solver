@@ -75,33 +75,26 @@ class Solver:
             self.split_statistics.append(current_state.split_statistics())
 
             # check for solution
-            solved, _ = current_state.validate()
+            solved = current_state.validate()
             if solved:
                 # found solution
                 print("\nSolved")
                 return current_state, True, self.split_statistics
 
-            # find set literals before
-            before = tuple(current_state.current_set_literals.keys())
-
             # simplify
-            valid, potential_problem = current_state.simplify()
-
-            # find set literals after
-            after = tuple(current_state.current_set_literals.keys())
+            set_literals = []
+            valid, potential_problem = current_state.simplify(set_literals)
 
             # add difference to order
-            difference = [literal for literal in after if literal not in before]
-            for literal in difference:
+            for literal in set_literals:
                 self.order.append(literal)
-                # todo: ook toevoegen aan stack met simplify-literal refererend naar de voorgaande split-literal ??
 
             if not valid:
                 self.retrieve_problem_clause(current_state, potential_problem)
                 continue
 
             # check again
-            solved, _ = current_state.validate()
+            solved = current_state.validate()
 
             if solved:
                 # found solution
@@ -228,7 +221,7 @@ class Solver:
             if (self.cyclefree[state.timestep] > self.backtrack_limit):
 
                 # restart if so
-                raise RestartException(f"\nBacktrack limit of {self.backtrack_limit} exceeded, attempting restart", restart = True)
+                raise RestartException(f"\nBacktrack limit of {self.backtrack_limit} exceeded, attempting restart", restart = True, stats=self.split_statistics)
 
             return state
 
@@ -272,7 +265,7 @@ class Solver:
 
             if abs(literal) in problem_clause.literals:
                 if abs(literal) in self.stack:
-                    return literal, order_index
+                    return abs(literal), order_index
 
                 for order_index2 in range(order_index, 0, -1):
                     literal = self.order[order_index2]
