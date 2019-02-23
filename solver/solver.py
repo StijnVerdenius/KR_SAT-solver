@@ -182,12 +182,12 @@ class Solver:
         # Find earliest literal from problem clause in order and stack
         literal, order_index = self.lookup_backtrack_literal(problem_clause)
 
-        # todo: find corresponding state in stack
+        # Find corresponding state in stack
         possible_assignments = [False, True]
         random.shuffle(possible_assignments)
         for truth_assignment in possible_assignments:
             if truth_assignment in self.stack[literal]:
-                state = self.stack[literal].pop(truth_assignment)
+                state = self.stack[literal][truth_assignment]
                 break
 
         self.add_problem_clauses_to_state(state)
@@ -210,9 +210,9 @@ class Solver:
                     print("Literal found", literal)
                     return literal, order_index
 
-                for order_index in range(order_index, 0, -1):
-                    if order_index in self.stack:
-                        literal = order_index
+                for order_index2 in range(order_index, 0, -1):
+                    if order_index2 in self.stack and len(self.stack[order_index2]):
+                        literal = self.order[order_index]
                         print("Back-lookup literal found", literal)
                         return literal, order_index
 
