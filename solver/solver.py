@@ -158,7 +158,7 @@ class Solver:
             truth_assignment = random.choice([True, False])
 
             # find state
-            state = self.stack[last_literal][truth_assignment]
+            state = self.saver.deepcopy_knowledge_base(self.stack[last_literal][truth_assignment], -1)
 
             if (state is None):
                 raise Exception("None-state")
@@ -181,12 +181,12 @@ class Solver:
         # Find earliest literal from problem clause in order and stack
         literal, order_index = self.lookup_backtrack_literal(problem_clause)
 
-        # todo: find corresponding state in stack
+        # Find corresponding state in stack
         possible_assignments = [False, True]
         random.shuffle(possible_assignments)
         for truth_assignment in possible_assignments:
             if truth_assignment in self.stack[literal]:
-                state = self.stack[literal][truth_assignment]
+                state = self.saver.deepcopy_knowledge_base(self.stack[literal][truth_assignment], -1)
                 break
 
         self.add_problem_clauses_to_state(state)
@@ -204,16 +204,19 @@ class Solver:
 
     def lookup_backtrack_literal(self, problem_clause):
         for order_index, literal in enumerate(self.order):
+
             if literal == "init":
                 continue
+
             if abs(literal) in problem_clause.literals:
-                if literal in self.stack:
+                if abs(literal) in self.stack:
                     return literal, order_index
 
-                for order_index in range(order_index, 0, -1):
-                    if order_index in self.stack:
-                        literal = order_index
-                        return literal, order_index
+                for order_index2 in range(order_index, 0, -1):
+                    literal = self.order[order_index2]
+                    if literal in self.stack and len(self.stack[literal]):
+                        print("Back-lookup literal found", literal)
+                        return literal, order_index2
 
         raise Exception("Ja gvd")
 
