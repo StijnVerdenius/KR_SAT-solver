@@ -13,7 +13,7 @@ class KnowledgeBase:
     - clauses
     - bookkeeping
     - current assignments
-    - todo: dependency graph?
+    - dependency graph
 
     """
 
@@ -80,12 +80,12 @@ class KnowledgeBase:
         valid, potential_problem_potential_literals_set1 = self.simplify_unit_clauses()
         if not valid:
             return valid, potential_problem_potential_literals_set1
-        valid, potential_problem_potential_literals_set2 = self.simplify_pure_literal()
-        if not valid:
-            return valid, potential_problem_potential_literals_set2
+        # valid, potential_problem_potential_literals_set2 = self.simplify_pure_literal()
+        # if not valid:
+        #     return valid, potential_problem_potential_literals_set2
 
-        if sum([potential_problem_potential_literals_set1, potential_problem_potential_literals_set2]) > 0:
-            return self.simplify()
+        # if sum([potential_problem_potential_literals_set1, potential_problem_potential_literals_set2]) > 0:
+        #     return self.simplify()
 
         return True, 0
 
@@ -156,19 +156,19 @@ class KnowledgeBase:
         # print(f"Tautology simplify removed {removed} clauses")
 
 
-    def set_literal(self, literal: int, truth_value: bool) -> Tuple[bool, int]:
+    def set_literal(self, literal: int, truth_value: bool, split=False) -> Tuple[bool, int]:
         """
         Set a literal and its boolean value
         :param literal:
         :param truth_value:
         """
 
-        # print(f"set {literal} to {truth_value}")
+        # print(f"set {literal} to {truth_value}")#, with current: {self.current_set_literals}")
 
         # First check if this is a allowed op.
         abs_literal = abs(literal)
 
-        self.dependency_graph.add_literal(abs_literal)
+        self.dependency_graph.add_literal(abs_literal, split=split)
 
         # Set literal
         self.current_set_literals[abs_literal] = truth_value
@@ -215,9 +215,6 @@ class KnowledgeBase:
                     # This can happen if we remove a tautology forexample
                     continue
 
-                # if (clause.id == 12010 and abs_literal==189):
-                #     print(self.timestep, self.bookkeeping[189])
-
                 self.bookkeeping[abs_literal].remove(clause.id)
 
                 if len(self.bookkeeping[abs_literal]) == 0:
@@ -236,22 +233,33 @@ class KnowledgeBase:
         return Split(len(self.bookkeeping.keys()), len(self.clauses))
 
     def add_clauses(self, clauses: Set[Clause]):
-        going_strong = True
+        """
+        Adds a list of clauses to KB
+
+        :param clauses:
+        :return:
+        """
+        valid = True
         for clause in clauses:
             if (clause.id not in self.clauses):
-                going_strong = self.add_clause(clause)
-                if not going_strong:
+                valid = self.add_clause(clause)
+                if not valid:
                     break
             else:
                 raise Exception("Clause id not unique")
-        return going_strong
+        return valid
 
     def add_clause(self, clause: Clause):
+        """
+        Adds a clause to KB
+
+        first looks whether it is a valid addition
+
+        :param clause:
+        :return:
+        """
         literals = clause.literals
         id = clause.id
-
-        # if (id ==12010):
-        #     print("stop")
 
         for literal in list(literals):
 

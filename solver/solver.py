@@ -97,7 +97,7 @@ class Solver:
         problem_clause = state.dependency_graph.find_conflict_clause(literal, self.clause_counter)
 
         # add
-        self.problem_clauses[state.timestep].add(problem_clause)
+        self.problem_clauses.append(problem_clause)
 
         # trigger a backtrack
         self.currently_conflict_mode = True
@@ -116,9 +116,9 @@ class Solver:
         self.timestep += 1
 
         # choose a literal todo: heuristiek ipv random
-        literal = random.choice(current_state.bookkeeping.keys())
+        literal = random.choice(list(current_state.bookkeeping.keys()))
         while literal in current_state.current_set_literals:
-            literal = random.choice(current_state.bookkeeping.keys())
+            literal = random.choice(list(current_state.bookkeeping.keys()))
 
         # add literal to order
         self.order.append(literal)
@@ -128,7 +128,7 @@ class Solver:
             new_state = self.saver.deepcopy_knowledge_base(current_state, self.timestep)
 
             # do split
-            valid, potential_problem = new_state.set_literal(literal, truth_assignment)
+            valid, potential_problem = new_state.set_literal(literal, truth_assignment, split=True)
 
             if not valid:
 
@@ -141,7 +141,7 @@ class Solver:
                 # problem free
                 new_states[truth_assignment] = new_state
 
-        return new_states
+        return new_states, literal
 
     def get_next_state(self) -> KnowledgeBase:
 

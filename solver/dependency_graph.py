@@ -13,8 +13,9 @@ class DependencyGraph:
 
             for key in bookkeeping:
                 for id in bookkeeping[key]:
-                    for literal in clauses[id].literals:
+                    for literal in [lit for lit in clauses[id].literals if not abs(lit) == key]:
                         self.initial_coocurrence[key].add(literal)
+
         else:
             self.initial_coocurrence = initial
 
@@ -28,15 +29,16 @@ class DependencyGraph:
         else:
             self.existing_literals = existing_literals
 
+    def add_literal(self, literal, split=False): # todo: toevoegen van boolean flag die kijkt of het een split of simplify actie is
 
-    def add_literal(self, literal): # todo: toevoegen van boolean flag die kijkt of het een split of simplify actie is
-
-        cooccuring = self.initial_coocurrence[literal]
-        for cooc_literal in cooccuring:
-            if (abs(cooc_literal) in self.existing_literals):
-                self.graph[literal].add(-cooc_literal) # todo: checken of dit klopt
+        if (not split):
+            cooccuring = self.initial_coocurrence[literal]
+            for cooc_literal in cooccuring:
+                if (abs(cooc_literal) in self.existing_literals):
+                    self.graph[literal].add(cooc_literal) # todo: checken of dit klopt
 
         self.existing_literals.append(literal)
+
 
     def find_conflict_clause(self, literal, id):
 
