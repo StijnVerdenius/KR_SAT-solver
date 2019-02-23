@@ -97,7 +97,7 @@ class Solver:
         problem_clause = state.dependency_graph.find_conflict_clause(literal, self.clause_counter)
 
         # add
-        self.problem_clauses[state.timestep].add(problem_clause)
+        self.problem_clauses.append(problem_clause)
 
         # trigger a backtrack
         self.currently_conflict_mode = True
@@ -111,14 +111,14 @@ class Solver:
         """
 
         # init with none
-        new_states = {True : None, False : None}
+        new_states = {True: None, False: None}
 
         self.timestep += 1
 
         # choose a literal todo: heuristiek ipv random
-        literal = random.choice(current_state.bookkeeping.keys())
+        literal = random.choice(list(current_state.bookkeeping.keys()))
         while literal in current_state.current_set_literals:
-            literal = random.choice(current_state.bookkeeping.keys())
+            literal = random.choice(list(current_state.bookkeeping.keys()))
 
         # add literal to order
         self.order.append(literal)
@@ -141,7 +141,7 @@ class Solver:
                 # problem free
                 new_states[truth_assignment] = new_state
 
-        return new_states
+        return new_states, literal
 
     def get_next_state(self) -> KnowledgeBase:
 
@@ -149,11 +149,19 @@ class Solver:
         if (not self.currently_conflict_mode):
 
             # find state values
-            literal = self.order[-1]
-            truth_assignment = random.choice([True, False]) # todo: hearistiek ipv random
+            # Find the first literal in the order that has a state in the stack
+            for last_literal in reversed(self.order):
+                truth_assignment = random.choice([True, False]) # todo: hearistiek ipv random
+                if last_literal in self.stack:
+                    break
 
+            # print("last literal stack")
+            # print(self.currently_conflict_mode)
+            # print(self.problem_clauses)
+            # print(type(self.stack[last_literal][True]))
+            # print(type(self.stack[last_literal][False]))
             # find state
-            state = self.stack[literal].pop(truth_assignment)
+            state = self.stack[last_literal].pop(truth_assignment)
 
             if (state is None):
                 raise Exception("None-state")
@@ -164,29 +172,58 @@ class Solver:
 
             return state
 
-        else: # backtrack
+        # backtrack
+        # reset conflict mode
+        self.currently_conflict_mode = False
 
+        # find relevant problem clause
+        problem_clause: Clause = self.problem_clauses[-1]
 
-            # reset conflict mode
-            self.currently_conflict_mode = False
+        # Find earliest literal from problem clause in order and stack
+        literal, order_index = self.lookup_backtrack_literal(problem_clause)
 
-            # find relevant problem clause
-            problem_clause = self.problem_clauses[-1]
+        # todo: find corresponding state in stack
+        possible_assignments = [False, True]
+        random.shuffle(possible_assignments)
+        for truth_assignment in possible_assignments:
+            if truth_assignment in self.stack[literal]:
+                state = self.stack[literal].pop(truth_assignment)
+                break
 
-            # todo: find earliest literal from problem clause in self.order
+        self.add_problem_clauses_to_state(state)
 
-            # todo: find corresponding state in stack
-            state = None
+        # Remove literals that came after from self.order
+        after = self.order[order_index + 1:]
+        self.order = self.order[:order_index + 1]
 
-            self.add_problem_clauses_to_state(state)
+        # Remove literals that came after from self.stack
+        for literal in after:
+            if literal in self.stack:
+                del self.stack[literal]
 
-            # todo: remove literals that came after from self.order
+        return state
 
-            # todo: remove literals that came after from self.stack
+    def lookup_backtrack_literal(self, problem_clause):
+        for order_index, literal in enumerate(self.order):
+            if literal in problem_clause.literals:
+                if literal in self.stack:
+                    print("Literal found", literal)
+                    return literal, order_index
 
-            return state
+                for order_index in range(order_index, 0, -1):
+                    if order_index in self.stack:
+                        literal = order_index
+                        print("Back-lookup literal found", literal)
+                        return literal, order_index
+
+        print("Problem clause Literals", problem_clause.literals)
+        print("Stack", list(self.stack.keys()))
+        print("Order", self.order)
+        raise Exception("Ja gvd")
 
     def add_problem_clauses_to_state(self, state):
+        print(f"Stack length {len(self.stack)}")
+        print("Adding problem clauses:", self.problem_clauses)
         valid = state.add_clauses(self.saver.personal_deepcopy(self.problem_clauses))
         if (not valid):
             raise Exception("Adding clauses led to invalid addition")
