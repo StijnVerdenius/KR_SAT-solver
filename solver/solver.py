@@ -45,7 +45,7 @@ class Solver:
 
                 runtime = timeit.default_timer() - start
                 if runtime > 30:
-                    raise RunningTimeException(f"!!! SKIPPING SUDOKU. Time is out, runtime:{runtime} !!!")
+                    # raise RunningTimeException(f"!!! SKIPPING SUDOKU. Time is out, runtime:{runtime} !!!")
                     pass
 
                 if count % 1 == 0:
@@ -102,7 +102,7 @@ class Solver:
             # print(f"Choice: {literal}={choice}")
 
             # do split
-            new_state = self.saver.deepcopy_knowledge_base(new_state)
+            new_state = self.saver.deepcopy_knowledge_base(current_state)
             valid = new_state.set_literal(literal, choice)
             if not valid:
                 self.failed_literals += 1
@@ -233,7 +233,7 @@ class Solver:
         max_items = int(mu + (gamma / n) + self.failed_literals)
         all_lits = list(current_state.bookkeeping.items())
 
-        # print(f"Max items: {max_items}, failed_literals: {self.failed_literals}, total_lits:, nr_of_splits:{self.nr_of_splits}")
+        print(f"Max items: {max_items}, failed_literals: {self.failed_literals}, total_lits:, nr_of_splits:{self.nr_of_splits}")
         # allowed_lits = list(set(current_state.bookkeeping.keys()))
         # random.shuffle(allowed_lits)
         # for literal in allowed_lits:
