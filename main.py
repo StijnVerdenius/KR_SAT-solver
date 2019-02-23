@@ -46,7 +46,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
 
 
     problems = range(0, 1000)
-    problems = range(0, 3)
+    # problems = range(0, 3)
     sudokus_stats = []
     for problem_id in problems:
 

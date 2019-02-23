@@ -77,12 +77,15 @@ class KnowledgeBase:
         """
         removes redundant information from knowledge base
         """
-        valid, potential_problem = self.simplify_unit_clauses()
+        valid, potential_problem_potential_literals_set1 = self.simplify_unit_clauses()
         if not valid:
-            return valid, potential_problem
-        # valid = self.simplify_pure_literal()
+            return valid, potential_problem_potential_literals_set1
+        valid, potential_problem_potential_literals_set2 = self.simplify_pure_literal()
         if not valid:
-            return valid, potential_problem
+            return valid, potential_problem_potential_literals_set2
+
+        if sum([potential_problem_potential_literals_set1, potential_problem_potential_literals_set2]) > 0:
+            return self.simplify()
 
         return True, 0
 
@@ -105,14 +108,15 @@ class KnowledgeBase:
             if not valid:
                 return valid, potential_problem
 
-        if literals_set > 0:
-            return self.simplify_unit_clauses()
-        return True, 0
+
+        return True, literals_set
 
     def simplify_pure_literal(self):
         """
         simplifies knowledge base for pure literals
         """
+
+        literals_set = 0
         # Wrap in list call is necessary to not change dict while iterating
         for literal in list(self.bookkeeping.keys()):
             attempt = set()
@@ -130,8 +134,10 @@ class KnowledgeBase:
                 valid, potential_problem = self.set_literal(literal, value)
                 if not valid:
                     return valid, potential_problem
+                else:
+                    literals_set += 1
 
-        return True, 0
+        return True, literals_set
 
     def simplify_tautology(self):
         """
@@ -200,16 +206,21 @@ class KnowledgeBase:
         :param clauses_to_remove:
         """
         for clause in clauses_to_remove:
-            del self.clauses[clause.id]
+
             for literal in clause.literals:
                 abs_literal = abs(literal)
                 if abs_literal not in self.bookkeeping:
                     # This can happen if we remove a tautology forexample
                     continue
 
+                # if (clause.id == 12010 and abs_literal==189):
+                #     print(self.timestep, self.bookkeeping[189])
+
                 self.bookkeeping[abs_literal].remove(clause.id)
+
                 if len(self.bookkeeping[abs_literal]) == 0:
                     del self.bookkeeping[abs_literal]
+            del self.clauses[clause.id]
 
     def __str__(self):
         return str({"bookkeeping" : self.bookkeeping, "current_set_literals" : self.current_set_literals, "clause_counter" : self.clause_counter, "clauses" : self.clauses})
@@ -237,7 +248,14 @@ class KnowledgeBase:
         literals = clause.literals
         id = clause.id
 
+        # if (id ==12010):
+        #     print("stop")
+
         for literal in list(literals):
+
+            #tautology
+            if (-literal in literals):
+                return True
 
             # is literal already set
             abs_literal = abs(literal)
