@@ -46,12 +46,14 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         pr.enable()
 
 
-    problems = range(0, 1000)
-    # problems = range(0, 3)
+    # problems = range(0, 1000)
+    problems = range(950,990)
     sudokus_stats = []
     for problem_id in problems:
 
         start = True
+
+        split_statistics = []
 
         while(start):
 
@@ -67,13 +69,13 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
 
                 # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
                 knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
-                solver = Solver(knowledge_base)
+                solver = Solver(knowledge_base, split_stats=split_statistics)
 
                 solution, solved, split_statistics = solver.solve_instance()
 
                 sudokus_stats.append(split_statistics)
 
-                # print_sudoku(solution)
+                print_sudoku(solution)
                 # print_stats(split_statistics)
                 dimacs = to_dimacs_str(solution)
 
@@ -83,6 +85,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
 
                 if (start):
                     print(f"Restarted {problem_id}")
+                    split_statistics = e.stats
 
 
 

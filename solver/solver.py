@@ -15,7 +15,7 @@ import timeit
 
 class Solver:
 
-    def __init__(self, knowledge_base : KnowledgeBase):
+    def __init__(self, knowledge_base : KnowledgeBase, split_stats=None):
         self.initial = knowledge_base
         self.saver = Saver("./temp/")
         self.timestep = 0
@@ -25,13 +25,18 @@ class Solver:
         self.problem_clauses = []
         self.order = ["init"]
         self.stack = {}
-        self.restart_limit = 100
+        self.backtrack_limit = 40
+
+        if (split_stats == None):
+            self.split_statistics = []
+        else:
+            self.split_statistics = split_stats
 
         self.cyclefree = defaultdict(int)
 
     def solve_instance(self) -> Tuple[KnowledgeBase, bool, List]:
         """ main function for solving knowledge base """
-        split_statistics = []
+
         start = timeit.default_timer()
         
         # Check tautology (part of simplify, but only done once)
@@ -53,14 +58,14 @@ class Solver:
 
             # user & statistics
             count = self.inform_user(current_state, count, start)
-            split_statistics.append(current_state.split_statistics())
+            self.split_statistics.append(current_state.split_statistics())
 
             # check for solution
             solved, _ = current_state.validate()
             if solved:
                 # found solution
                 print("\nSolved")
-                return current_state, True, split_statistics
+                return current_state, True, self.split_statistics
 
             # find set literals before
             before = tuple(current_state.current_set_literals.keys())
@@ -87,7 +92,7 @@ class Solver:
             if solved:
                 # found solution
                 print("\nSolved")
-                return current_state, True, split_statistics
+                return current_state, True, self.split_statistics
             else:
                 # split
                 future_states, literal = self.expand_tree_by_split(current_state)
@@ -158,25 +163,19 @@ class Solver:
             # find state values
             # Find the first literal in the order that has a state in the stack
             for last_literal in reversed(self.order):
-                 # todo: hearistiek ipv random
                 if last_literal in self.stack:
                     break
 
-            truth_assignment = random.choice([True, False])
+            truth_assignment = random.choice([True, False]) # todo: hearistiek ipv random
 
             # find state
-            state = self.saver.deepcopy_knowledge_base(self.stack[last_literal][truth_assignment], -1)
-
-            if (state is None):
-                raise Exception("None-state")
-                # todo: dit betekent dat in split een fout gaf voor 1 van de twee states en die het somehow overleeft heeft, wat hieraan te doen?
+            state = self.stack[last_literal][truth_assignment]
+            state = self.saver.deepcopy_knowledge_base(state, state.timestep)
 
             # add problem clauses
             self.add_problem_clauses_to_state(state)
 
             return state
-
-        print("Entered backtrack")
 
         # backtrack
         # reset conflict mode
@@ -209,8 +208,8 @@ class Solver:
                 del self.stack[literal]
 
         self.cyclefree[state.timestep] += 1
-        if self.cyclefree[state.timestep] > self.restart_limit:
-            raise RestartException(f"Max valt op mannen. Also: restart limit of {self.restart_limit} exceeded", restart = True)
+        if self.cyclefree[state.timestep] > self.backtrack_limit:
+            raise RestartException(f"\nBacktrack limit of {self.backtrack_limit} exceeded", restart = True)
 
         return state
 

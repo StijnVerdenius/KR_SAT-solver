@@ -80,12 +80,12 @@ class KnowledgeBase:
         valid, potential_problem_potential_literals_set1 = self.simplify_unit_clauses()
         if not valid:
             return valid, potential_problem_potential_literals_set1
-        # valid, potential_problem_potential_literals_set2 = self.simplify_pure_literal()
-        # if not valid:
-        #     return valid, potential_problem_potential_literals_set2
+        valid, potential_problem_potential_literals_set2 = self.simplify_pure_literal()
+        if not valid:
+            return valid, potential_problem_potential_literals_set2
 
-        # if sum([potential_problem_potential_literals_set1, potential_problem_potential_literals_set2]) > 0:
-        #     return self.simplify()
+        if sum([potential_problem_potential_literals_set1, potential_problem_potential_literals_set2]) > 0:
+            return self.simplify()
 
         return True, 0
 
@@ -153,7 +153,7 @@ class KnowledgeBase:
                 self.remove_clauses([clause])
                 removed += 1
 
-        # print(f"Tautology simplify removed {removed} clauses")
+        print(f"Tautology simplify removed {removed} clauses")
 
 
     def set_literal(self, literal: int, truth_value: bool, split=False) -> Tuple[bool, int]:
