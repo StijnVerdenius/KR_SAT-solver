@@ -212,7 +212,7 @@ class Solver:
 
                 for order_index2 in range(order_index, 0, -1):
                     if order_index2 in self.stack and len(self.stack[order_index2]):
-                        literal = self.order[order_index]
+                        literal = self.order[order_index2]
                         print("Back-lookup literal found", literal)
                         return literal, order_index
 
