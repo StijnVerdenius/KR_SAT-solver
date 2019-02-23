@@ -11,44 +11,50 @@ except ImportError as e:
 Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
 
 def show_stats(sudokus_stats):
-    max_splits = max(len(split_stats) for split_stats in sudokus_stats)
+    max_splits = max(len(split_stats[0]) for split_stats in sudokus_stats)
 
     y = np.zeros((len(sudokus_stats), max_splits))
     y = pd.DataFrame(data=y)
 
     literal_cnts = []
+    clause_cnts = []
     sudoku_nrs = []
     xs = []
     algorithms = []
-    for i, splits in enumerate(sudokus_stats):
+    for splits, sudoku_nr in sudokus_stats:
         x = 0
-
         for j, split in enumerate(splits):
             literal_cnts.append(split.literal_cnt)
-            sudoku_nrs.append(i)
+            clause_cnts.append(split.clause_cnt)
+            sudoku_nrs.append(sudoku_nr)
             xs.append(x)
             algorithms.append('FAST')
 
             x += 1
             # y[i, j] = split.literal_cnt
 
-    d = {'literals': literal_cnts, 'sudoku': sudoku_nrs, 'splits': xs, 'algorithm': algorithms}
+    d = {'Literals': literal_cnts, 'Clauses':clause_cnts, 'Sudoku': sudoku_nrs, 'Splits': xs, 'algorithm': algorithms}
     df = pd.DataFrame(data=d)
     print(df)
 
-    sns.lineplot(x="splits", y='literals', data=df)
-    plt.xlabel("Splits")
-    plt.ylabel("Clauses")
+    sns.lineplot(x="Splits", y='Literals', data=df)
+    # plt.xlabel("Splits")
+    # plt.ylabel("Clauses")
     plt.show()
 
-    sns.lineplot(x="splits", y='literals', data=df, hue="sudoku")
-    plt.xlabel("Splits")
-    plt.ylabel("Clauses")
+    sns.lineplot(x="Splits", y='Literals', data=df, hue="Sudoku")
+    # plt.xlabel("Splits")
+    # plt.ylabel("Clauses")
     plt.show()
 
-    sns.lineplot(x="splits", y='literals', data=df, hue='algorithm')
-    plt.xlabel("Splits")
-    plt.ylabel("Clauses")
+    sns.lineplot(x="Splits", y='Clauses', data=df, hue="Sudoku")
+    # plt.xlabel("Splits")
+    # plt.ylabel("Clauses")
+    plt.show()
+
+    sns.lineplot(x="Splits", y='Literals', data=df, hue='algorithm')
+    # plt.xlabel("Splits")
+    # plt.ylabel("Clauses")
     plt.show()
 
 

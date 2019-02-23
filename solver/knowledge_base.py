@@ -1,7 +1,10 @@
 from collections import defaultdict, namedtuple
 from typing import List, Dict, Set, Tuple
+
 from solver.clause import Clause
 from solver.dependency_graph import DependencyGraph
+
+Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
 
 class KnowledgeBase:
     """
@@ -13,7 +16,7 @@ class KnowledgeBase:
     - clauses
     - bookkeeping
     - current assignments
-    - dependency graph
+    - todo: dependency graph?
 
     """
 
@@ -228,8 +231,6 @@ class KnowledgeBase:
         return self.__str__()
 
     def split_statistics(self):
-        Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
-
         return Split(len(self.bookkeeping.keys()), len(self.clauses))
 
     def add_clauses(self, clauses: Set[Clause]):
