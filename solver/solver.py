@@ -4,6 +4,8 @@ from solver.saver import Saver
 from solver.knowledge_base import KnowledgeBase
 from solver.clause import Clause
 from collections import deque, defaultdict
+from solver.restart_exception import RestartException
+
 import random
 try:
     import numpy as np
@@ -23,6 +25,9 @@ class Solver:
         self.problem_clauses = []
         self.order = ["init"]
         self.stack = {}
+        self.restart_limit = 100
+
+        self.cyclefree = defaultdict(int)
 
     def solve_instance(self) -> Tuple[KnowledgeBase, bool, List]:
         """ main function for solving knowledge base """
@@ -148,6 +153,8 @@ class Solver:
         # if not in error mode: depth first state expansion
         if (not self.currently_conflict_mode):
 
+            self.cyclefree = defaultdict(int)
+
             # find state values
             # Find the first literal in the order that has a state in the stack
             for last_literal in reversed(self.order):
@@ -186,7 +193,8 @@ class Solver:
         random.shuffle(possible_assignments)
         for truth_assignment in possible_assignments:
             if truth_assignment in self.stack[literal]:
-                state = self.saver.deepcopy_knowledge_base(self.stack[literal][truth_assignment], -1)
+                stack_state : KnowledgeBase = self.stack[literal][truth_assignment]
+                state = self.saver.deepcopy_knowledge_base(stack_state, stack_state.timestep)
                 break
 
         self.add_problem_clauses_to_state(state)
@@ -199,6 +207,10 @@ class Solver:
         for literal in after:
             if literal in self.stack:
                 del self.stack[literal]
+
+        self.cyclefree[state.timestep] += 1
+        if self.cyclefree[state.timestep] > self.restart_limit:
+            raise RestartException(f"Max valt op mannen. Also: restart limit of {self.restart_limit} exceeded", restart = True)
 
         return state
 
@@ -215,10 +227,9 @@ class Solver:
                 for order_index2 in range(order_index, 0, -1):
                     literal = self.order[order_index2]
                     if literal in self.stack and len(self.stack[literal]):
-                        print("Back-lookup literal found", literal)
                         return literal, order_index2
 
-        raise Exception("Ja gvd")
+        raise Exception("Could not find backtrack literal")
 
     def add_problem_clauses_to_state(self, state):
         valid = state.add_clauses(self.saver.personal_deepcopy(self.problem_clauses))

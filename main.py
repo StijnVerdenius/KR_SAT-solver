@@ -8,6 +8,7 @@ from solver.read import read_text_sudoku as read_problem
 from solver.solver import *
 from solver.stats import print_stats, show_stats
 from solver.visualizer import print_sudoku
+from solver.restart_exception import RestartException
 
 """
     1. SAT Solver
@@ -50,24 +51,40 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
     sudokus_stats = []
     for problem_id in problems:
 
+        start = True
 
-        print(f"Solving problem {problem_id}")
-        rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
-        rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
+        while(start):
 
-        all_clauses = {**rules_clauses, **rules_puzzle}
+            start = False
 
-        # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
-        knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
-        solver = Solver(knowledge_base)
+            try:
 
-        solution, solved, split_statistics = solver.solve_instance()
+                print(f"Solving problem {problem_id}")
+                rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
+                rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
 
-        sudokus_stats.append(split_statistics)
+                all_clauses = {**rules_clauses, **rules_puzzle}
 
-        # print_sudoku(solution)
-        # print_stats(split_statistics)
-        dimacs = to_dimacs_str(solution)
+                # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
+                knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
+                solver = Solver(knowledge_base)
+
+                solution, solved, split_statistics = solver.solve_instance()
+
+                sudokus_stats.append(split_statistics)
+
+                # print_sudoku(solution)
+                # print_stats(split_statistics)
+                dimacs = to_dimacs_str(solution)
+
+            except RestartException as e:
+
+                start = e.restart
+
+                if (start):
+                    print(f"Restarted {problem_id}")
+
+
 
     show_stats(sudokus_stats)
 
