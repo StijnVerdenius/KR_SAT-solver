@@ -318,6 +318,9 @@ class Solver:
 
         return count
 
+    def chronological_backtracking(self):
+        pass # todo for versie 1
+
 
     # def nr_of_binary_clauses(self, state):
     #     return sum((1 for clause in state.clauses.values() if len(clause.literals) == 2))

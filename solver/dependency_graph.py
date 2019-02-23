@@ -1,10 +1,15 @@
 
 from collections import defaultdict
 from solver.clause import Clause
+from typing import List, Dict, Set, Tuple
+
 
 
 
 class DependencyGraph:
+
+    initial_coocurrence: Dict[int, Set[int]]
+    graph: Dict[int, Set[int]]
 
     def __init__(self, initial=None, graph = None, existing_literals = None, bookkeeping=None, clauses=None):
 

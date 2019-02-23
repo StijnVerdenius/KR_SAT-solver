@@ -16,7 +16,7 @@ class KnowledgeBase:
     - clauses
     - bookkeeping
     - current assignments
-    - todo: dependency graph?
+    - dependency graph
 
     """
 
@@ -178,12 +178,12 @@ class KnowledgeBase:
             clause = self.clauses[clause_id]
 
             # If we set P to true and ~P is set, we can remove the clause
-            if (not truth_value) and (-abs_literal) in clause.literals:
+            if ((not truth_value) and (-abs_literal) in clause.literals) or (truth_value and abs_literal in clause.literals):
+
                 clauses_to_remove.append(clause)
-            elif truth_value and abs_literal in clause.literals:
-                clauses_to_remove.append(clause)
+
             else:
-                #(truth_value is False and literal in clause.literals) or (truth_value is True and (-literal) in clause.literals):
+
                 if len(clause.literals) == 1:
                     return False, abs_literal
 
@@ -192,7 +192,6 @@ class KnowledgeBase:
                     clause.literals.remove(-abs_literal)
                 if abs_literal in clause.literals:
                     clause.literals.remove(abs_literal)
-
 
         if abs_literal in self.bookkeeping:
             del self.bookkeeping[abs_literal]
