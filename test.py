@@ -40,4 +40,14 @@ def test_solver_case4():
     res, solved, _ = s.solve_instance()
     print(res.current_set_literals)
 
+def test_solver_case5():
+    ls = [[-1, -2, -3], [-1, -2], [-2,-3], [-1,-3]]
+    clauses = [Clause(i, l) for i, l in enumerate(ls)]
+    clauses = {clause.id: clause for clause in clauses}
+    kb = KnowledgeBase(clauses, clause_counter=len(clauses))
+    s = Solver(kb)
+
+    res, solved, _ = s.solve_instance()
+    print(res.current_set_literals)
+
 test_solver_case4()

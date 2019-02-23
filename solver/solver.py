@@ -128,7 +128,7 @@ class Solver:
             new_state = self.saver.deepcopy_knowledge_base(current_state, self.timestep)
 
             # do split
-            valid, potential_problem = new_state.set_literal(literal, truth_assignment)
+            valid, potential_problem = new_state.set_literal(literal, truth_assignment, split=True)
 
             if not valid:
 
