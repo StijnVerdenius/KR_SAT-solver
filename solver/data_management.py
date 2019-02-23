@@ -6,7 +6,7 @@ except ImportError:
 from solver.knowledge_base import KnowledgeBase
 from solver.dependency_graph import DependencyGraph
 
-class Saver():
+class DataManager():
 
     def __init__(self, directory):
         self.directory = directory
@@ -32,7 +32,7 @@ class Saver():
     def personal_deepcopy(self, obj):
         return pickle.loads(pickle.dumps(obj, protocol=-1))
 
-    def deepcopy_knowledge_base(self, base : KnowledgeBase, step : int):
+    def duplicate_knowledge_base(self, base : KnowledgeBase, step : int):
 
         clauses_ = self.personal_deepcopy(base.clauses)
         set_literals_ = self.personal_deepcopy(base.current_set_literals)

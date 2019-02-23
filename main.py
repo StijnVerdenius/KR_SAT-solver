@@ -40,7 +40,7 @@ def main(program_version: int, rules_dimacs_file_path: str):
 
 
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
-    profile = False
+    profile = True
     multiprocessing = False
 
     if profile:
@@ -56,7 +56,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         return
 
     # problems = range(0, 1000)
-    problems = range(950,990)
+    problems = range(950,960)
 
     sudokus_stats = []
     for problem_id in problems:
@@ -97,10 +97,6 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
                     print(f"Restarted {problem_id}")
                     split_statistics = e.stats
 
-
-
-    show_stats(sudokus_stats)
-
     if profile:
         pr.disable()
         s = io.StringIO()
@@ -108,6 +104,10 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
         ps.print_stats()
         print(s.getvalue())
+
+    show_stats(sudokus_stats)
+
+
 
 def solve_sudoku(problem_id):
     print(f"Solving problem {problem_id}")
