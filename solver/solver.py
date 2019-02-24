@@ -220,6 +220,8 @@ class Solver:
 
         else: # backtrack
 
+            print("backtrack")
+
             # reset conflict mode
             self.backtrack_mode_active = False
 

@@ -63,10 +63,6 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         pr = cProfile.Profile()
         pr.enable()
 
-    problems = range(0, 5)
-
-    # program_version = 2
-
     if multiprocessing:
         p = Pool(12)
         results = p.map(solve_sudoku, problems)
