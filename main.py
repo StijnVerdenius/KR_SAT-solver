@@ -1,6 +1,7 @@
 import sys
 import os
 import cProfile, pstats, io
+from functools import partial
 from multiprocessing import Pool
 
 from solver.dimacs_write import to_dimacs_str
@@ -61,67 +62,25 @@ def get_settings(program_version: int):
 
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
     profile = False
-    multiprocessing = False
+    multiprocessing = True
 
 
-    problems = range(0,10)
+    problems = list(range(0,100))
 
     if profile:
         pr = cProfile.Profile()
         pr.enable()
 
-    if multiprocessing:
-        p = Pool(12)
-        results = p.map(solve_sudoku, problems)
-        sudokus_stats = list(filter(lambda x: x is not None, results))
-        return
-
-
-
     for program_version in [2, 3]:
         settings = get_settings(program_version)
         print("SETTINGS:", settings)
 
-        sudokus_stats = []
-        for problem_id in problems:
-
-            start = True
-            split_statistics = []
-            while(start):
-                start = False
-
-                try:
-                    print(f"\nStarting solving problem {problem_id}")
-                    print("Loading problem...")
-                    rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
-                    rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
-
-                    all_clauses = {**rules_clauses, **rules_puzzle}
-
-                    # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
-                    knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
-                    print("Problem loaded")
-
-                    if program_version == 3:
-                        solver = LookAHeadSolver(knowledge_base)
-                    else:
-                        solver = Solver(knowledge_base, split_stats=split_statistics, heuristics=settings)
-
-                    solution, solved, split_statistics = solver.solve_instance()
-
-                    sudokus_stats.append((split_statistics, problem_id, program_version))
-
-                    print_sudoku(solution)
-                    # print_stats(split_statistics)
-                    dimacs = to_dimacs_str(solution)
-
-                except RestartException as e:
-
-                    start = e.restart
-
-                    if (start):
-                        print(f"Restarted {problem_id}")
-                        split_statistics = e.stats
+        solve_fn = partial(solve_sudoku, problem_path=problem_path, program_version=program_version, rules_dimacs_file_path=rules_dimacs_file_path, settings=settings)
+        if multiprocessing:
+            p = Pool(12)
+            sudokus_stats = list(p.map(solve_fn, problems))
+        else:
+            sudokus_stats = list(map(solve_fn, problems))
 
         dm = DataManager(os.getcwd() + '/results/')
         dm.save_python_obj(sudokus_stats, f"experiment-v{program_version}")
@@ -135,33 +94,45 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         print(s.getvalue())
 
 
+def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_path, settings):
+    print(f"problem: {problem_id}")
+    start = True
+    split_statistics = []
+    while (start):
+        start = False
 
-def solve_sudoku(problem_id):
-    print(f"Solving problem {problem_id}")
-    problem_path = os.getcwd() + "/data/sudokus/1000sudokus.txt"
-    rules_dimacs_file_path = os.getcwd() + "/data/sudoku-rules.txt"
-    rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
-    rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
+        try:
+            print(f"\nStarting solving problem {problem_id}")
+            print("Loading problem...")
+            rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
+            rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
 
-    all_clauses = {**rules_clauses, **rules_puzzle}
+            all_clauses = {**rules_clauses, **rules_puzzle}
 
-    # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
-    knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
-    solver = Solver(knowledge_base)
+            # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
+            knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
+            print("Problem loaded")
 
-    try:
-        solution, solved, split_statistics = solver.solve_instance()
-    except RunningTimeException as e:
-        print(e)
-        return None
+            if program_version == 3:
+                solver = LookAHeadSolver(knowledge_base)
+            else:
+                solver = Solver(knowledge_base, split_stats=split_statistics, heuristics=settings)
 
-    # sudokus_stats.append((split_statistics, problem_id))
+            solution, solved, split_statistics = solver.solve_instance()
 
-    print_sudoku(solution)
-    # print_stats(split_statistics)
-    dimacs = to_dimacs_str(solution)
 
-    return (split_statistics, problem_id)
+            print_sudoku(solution)
+            # print_stats(split_statistics)
+            dimacs = to_dimacs_str(solution)
+            return (split_statistics, problem_id, program_version)
+
+        except RestartException as e:
+
+            start = e.restart
+
+            if (start):
+                print(f"Restarted {problem_id}")
+                split_statistics = e.stats
 
 
 if __name__ == "__main__":
