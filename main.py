@@ -62,7 +62,7 @@ def get_settings(program_version: int):
 
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
     profile = False
-    multiprocessing = True
+    multiprocessing = False
 
 
     problems = list(range(0,100))
@@ -102,7 +102,7 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
         start = False
 
         try:
-            print(f"\nStarting solving problem {problem_id}")
+            print(f"\nStarting solving problem {problem_id}, program_version: {program_version}")
             print("Loading problem...")
             rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
             rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
