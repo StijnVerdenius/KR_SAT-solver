@@ -21,7 +21,15 @@ def show_stats(sudokus_stats):
     xs = []
     algorithms = []
     algorithm_names = {2: 'CDCL', 3: 'Look-Ahead'}
+
+    nr_of_splits = []
+    versions = []
+    sudokus = []
     for splits, sudoku_nr, program_version in sudokus_stats:
+        nr_of_splits.append(len(splits))
+        versions.append(algorithm_names[program_version])
+        sudokus.append(sudoku_nr)
+
         x = 0
         for j, split in enumerate(splits):
             literal_cnts.append(split.literal_cnt)
@@ -33,29 +41,67 @@ def show_stats(sudokus_stats):
             x += 1
             # y[i, j] = split.literal_cnt
 
-    d = {'Literals': literal_cnts, 'Clauses':clause_cnts, 'Sudoku': sudoku_nrs, 'Splits': xs, 'algorithm': algorithms}
+    d = {'Literals': literal_cnts, 'Clauses':clause_cnts, 'Sudoku': sudoku_nrs, 'Splits': xs, 'Algorithm': algorithms}
     df = pd.DataFrame(data=d)
-    print(df)
 
-    sns.lineplot(x="Splits", y='Literals', data=df)
+    df_split_len = pd.DataFrame(data={'Splits': nr_of_splits, 'Sudoku': sudokus, 'Algorithm': versions})
+
+    # print(df)
+    # sns.lineplot(x="Splits", y='Literals', data=df)
     # plt.xlabel("Splits")
     # plt.ylabel("Clauses")
-    plt.show()
+    # plt.show()
 
-    sns.lineplot(x="Splits", y='Literals', data=df, hue="Sudoku")
+    # sns.lineplot(x="Splits", y='Literals', data=df, hue="Sudoku")
     # plt.xlabel("Splits")
     # plt.ylabel("Clauses")
-    plt.show()
+    # plt.show()
 
-    sns.lineplot(x="Splits", y='Clauses', data=df, hue="Sudoku")
+    # sns.lineplot(x="Splits", y='Clauses', data=df, hue="Sudoku")
     # plt.xlabel("Splits")
     # plt.ylabel("Clauses")
+    # plt.show()
+
+    sns.lineplot(x="Splits", y='Literals', data=df, hue='Algorithm')
+    plt.xlabel("Splits")
+    plt.ylabel("Literals")
     plt.show()
 
-    sns.lineplot(x="Splits", y='Literals', data=df, hue='algorithm')
-    # plt.xlabel("Splits")
-    # plt.ylabel("Clauses")
+    sns.lineplot(x="Splits", y='Clauses', data=df, hue='Algorithm')
+    plt.xlabel("Splits")
+    plt.ylabel("Clauses")
     plt.show()
+
+    sns.stripplot(x="Sudoku", y="Splits", hue="Algorithm", data=df_split_len)
+    plt.show()
+
+    sns.stripplot(x="Algorithm", y="Splits", data=df_split_len)
+    plt.show()
+
+    sns.violinplot(x="Algorithm", y="Splits", data=df_split_len)
+    plt.show()
+
+    # sns.scatterplot(x="Literals", y="Clauses", hue="Algorithm", data=df)
+    # plt.show()
+
+    sns.barplot(x="Sudoku", y='Splits', data=df_split_len, hue='Algorithm')
+    plt.show()
+
+    sns.boxenplot(y="Splits", x="Algorithm",  data=df_split_len)
+    plt.show()
+
+    for name in algorithm_names.values():
+        splits_dist_items = df_split_len[df_split_len["Algorithm"] == name]
+        splits_dist = splits_dist_items["Splits"]
+        sns.distplot(splits_dist, norm_hist=False)
+        plt.title(name)
+        plt.show()
+
+        sns.boxenplot(x="Splits", data=splits_dist_items)
+        plt.title(name)
+        plt.show()
+
+
 
 
     # for sudoku in sudokus:

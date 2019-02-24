@@ -155,9 +155,6 @@ class KnowledgeBase:
                 self.remove_clauses([clause])
                 removed += 1
 
-        print(f"Tautology simplify removed {removed} clauses")
-
-
     def set_literal(self, literal: int, truth_value: bool, split=False, dependency_graph=False) -> Tuple[bool, int]:
         """
         Set a literal and its boolean value

@@ -62,10 +62,10 @@ def get_settings(program_version: int):
 
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
     profile = False
-    multiprocessing = False
+    multiprocessing = True
 
 
-    problems = list(range(0,100))
+    problems = range(0,1000)
 
     if profile:
         pr = cProfile.Profile()
@@ -77,10 +77,12 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
 
         solve_fn = partial(solve_sudoku, problem_path=problem_path, program_version=program_version, rules_dimacs_file_path=rules_dimacs_file_path, settings=settings)
         if multiprocessing:
-            p = Pool(12)
+            p = Pool(6)
             sudokus_stats = list(p.map(solve_fn, problems))
+            sudokus_stats = list(filter(lambda x: x[0] is not None, sudokus_stats))
         else:
-            sudokus_stats = list(map(solve_fn, problems))
+            sudokus_stats = map(solve_fn, problems)
+            sudokus_stats = list(filter(lambda x: x[0] is not None, sudokus_stats))
 
         dm = DataManager(os.getcwd() + '/results/')
         dm.save_python_obj(sudokus_stats, f"experiment-v{program_version}")
@@ -116,14 +118,19 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
             if program_version == 3:
                 solver = LookAHeadSolver(knowledge_base)
             else:
-                solver = Solver(knowledge_base, split_stats=split_statistics, heuristics=settings)
+                solver = Solver(knowledge_base, split_stats=split_statistics, heuristics=settings, problem_id=problem_id)
 
-            solution, solved, split_statistics = solver.solve_instance()
+            try:
+                solution, solved, split_statistics = solver.solve_instance()
 
+                # print_sudoku(solution)
+            except RunningTimeException as e:
+                print(f"!!! SKIPPED SUDOKU {problem_id} !!!")
+                print(e)
+                return (None, None, None)
 
-            print_sudoku(solution)
             # print_stats(split_statistics)
-            dimacs = to_dimacs_str(solution)
+            #dimacs = to_dimacs_str(solution)
             return (split_statistics, problem_id, program_version)
 
         except RestartException as e:
