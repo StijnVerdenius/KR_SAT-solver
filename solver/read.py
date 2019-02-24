@@ -40,7 +40,7 @@ def read_text_sudoku(puzzle_path: str, puzzle_number: int, id: int) -> Tuple[Dic
 
             if (i == puzzle_number):
 
-                print(line)
+                # print(line)
 
                 line = line.replace("\n", "")
 
@@ -60,7 +60,7 @@ def read_text_sudoku(puzzle_path: str, puzzle_number: int, id: int) -> Tuple[Dic
 
                 template = template.reshape((int(math.sqrt(len(line))), int(math.sqrt(len(line)))))
 
-                print(template)
+                # print(template)
 
                 output = "{}"
 

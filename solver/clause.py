@@ -39,6 +39,9 @@ class Clause(object):
 
         return False, False
 
+    def remove_literal(self, literal):
+        self.literals.remove(literal)
+
     def __str__(self):
         return str(self.literals)
 
