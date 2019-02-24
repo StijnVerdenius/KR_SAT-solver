@@ -39,6 +39,22 @@ def main(program_version: int, rules_dimacs_file_path: str):
     print_sudoku(solution)
 
 
+def get_settings(program_version: int):
+
+    if (program_version > 4):
+        raise Exception("Program version should be between 1-4")
+
+    settings = {key: False for key in ["DependencyGraph", "Heuristiek2"]}
+    if (program_version == 1):
+        pass
+    elif (program_version > 1):
+        settings["DependencyGraph"] = True
+        if (program_version > 2):
+            settings["Heuristiek2"] = True
+
+    return settings
+
+
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
     profile = True
     multiprocessing = False
@@ -49,14 +65,20 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
 
     problems = range(0, 5)
 
+    # program_version = 2
+
     if multiprocessing:
         p = Pool(12)
         results = p.map(solve_sudoku, problems)
         sudokus_stats = list(filter(lambda x: x is not None, results))
         return
 
+    settings = get_settings(program_version)
+
+    print("SETTINGS:", settings)
+
     # problems = range(0, 1000)
-    problems = range(950,960)
+    problems = range(0,100)
 
     sudokus_stats = []
     for problem_id in problems:
@@ -71,7 +93,8 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
 
             try:
 
-                print(f"Solving problem {problem_id}")
+                print(f"\nStarting solving problem {problem_id}")
+                print("Loading problem...")
                 rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
                 rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
 
@@ -79,7 +102,8 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
 
                 # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
                 knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
-                solver = Solver(knowledge_base, split_stats=split_statistics)
+                print("Problem loaded")
+                solver = Solver(knowledge_base, split_stats=split_statistics, heuristics=settings)
 
                 solution, solved, split_statistics = solver.solve_instance()
 

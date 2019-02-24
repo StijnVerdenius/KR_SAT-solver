@@ -18,13 +18,18 @@ except ImportError:
 import timeit
 
 
-class RunningTimeException(Exception):
-    pass
+# class RunningTimeException(Exception):
+#     pass
 
 
 class Solver:
 
-    def __init__(self, knowledge_base : KnowledgeBase, split_stats=None):
+    def __init__(self, knowledge_base: KnowledgeBase, split_stats=None, heuristics=None):
+
+        if (heuristics == None):
+            raise Exception("No heuristics specified")
+        else:
+            self.heuristics = heuristics
 
         # initial knowledge base
         self.initial = knowledge_base
@@ -38,7 +43,7 @@ class Solver:
         # counts clauses
         self.clause_counter = self.initial.clause_counter
 
-        # todo: max
+        # todo: max ??
         self.nr_of_splits = 0
         self.total_literals = knowledge_base.literal_counter
         self.failed_literals = 0
@@ -56,7 +61,7 @@ class Solver:
         self.stack = {}
 
         # limit for backtracking back to the same node
-        self.backtrack_limit = 25
+        self.backtrack_limit = 30
 
         # statistics tracker
         if (split_stats == None):
@@ -88,7 +93,7 @@ class Solver:
         count = 0
 
         # to retrieve initial value on start
-        current_state = self.data_manager.duplicate_knowledge_base(self.initial, 0)
+        current_state = self.data_manager.duplicate_knowledge_base(self.initial, 0, use_dependency_graph=self.is_dependency_graph_active())
         self.stack["init"] = {True : current_state, False: current_state}
 
         while (not solved):
@@ -111,13 +116,13 @@ class Solver:
 
             # simplify
             set_literals = []
-            valid, potential_problem = current_state.simplify(set_literals)
+            valid, potential_problem = current_state.simplify(set_literals, self.is_dependency_graph_active())
 
             # add difference to order
             for literal in set_literals:
                 self.order.append(literal)
 
-
+            # detect problems
             if not valid:
                 # backtrack
                 self.handle_problem_clause(current_state, potential_problem)
@@ -143,6 +148,9 @@ class Solver:
         :param literal:
         :return:
         """
+        if (not self.is_dependency_graph_active()):
+            # not needed in absence of depency graph heuristic
+            return
 
         # up counter
         self.clause_counter += 1
@@ -179,10 +187,10 @@ class Solver:
 
         for truth_assignment in [False, True]:
 
-            new_state = self.data_manager.duplicate_knowledge_base(current_state, self.timestep)
+            new_state = self.data_manager.duplicate_knowledge_base(current_state, self.timestep, use_dependency_graph=self.is_dependency_graph_active())
 
             # do split
-            valid, potential_problem = new_state.set_literal(literal, truth_assignment, split=True)
+            valid, potential_problem = new_state.set_literal(literal, truth_assignment, split=True, dependency_graph=self.is_dependency_graph_active())
 
             if not valid:
 
@@ -205,28 +213,10 @@ class Solver:
         :return:
         """
 
-        # if not in error mode: depth first state expansion
-        if (not self.backtrack_mode_active):
+        if (not self.is_dependency_graph_active() or not self.backtrack_mode_active):
 
-            # reset infinite loop detection
-            self.cyclefree = defaultdict(int)
-
-            # find state values
-            # Find the first literal in the order that has a state in the stack
-            for last_literal in reversed(self.order):
-                if last_literal in self.stack:
-                    break
-
-            truth_assignment = random.choice([True, False])
-
-            # find state
-            state = self.stack[last_literal][truth_assignment]
-            state = self.data_manager.duplicate_knowledge_base(state, state.timestep)
-
-            # add problem clauses
-            self.add_problem_clauses_to_state(state)
-
-            return state
+            # if not in error mode: depth first state expansion
+            return self.chronological_backtracking()
 
         else: # backtrack
 
@@ -245,10 +235,10 @@ class Solver:
             for truth_assignment in possible_assignments:
                 if truth_assignment in self.stack[literal]:
                     stack_state : KnowledgeBase = self.stack[literal][truth_assignment]
-                    state = self.data_manager.duplicate_knowledge_base(stack_state, stack_state.timestep)
+                    state = self.data_manager.duplicate_knowledge_base(stack_state, stack_state.timestep, use_dependency_graph=self.is_dependency_graph_active())
                     break
 
-            self.add_problem_clauses_to_state(state)
+            self.add_problem_clauses_to_state(state) ## todo : reference before assignment risk
 
             # Remove literals that came after from self.order
             after = self.order[order_index + 1:]
@@ -264,7 +254,7 @@ class Solver:
             if (self.cyclefree[state.timestep] > self.backtrack_limit):
 
                 # restart if so
-                raise RestartException(f"\nBacktrack limit of {self.backtrack_limit} exceeded, attempting restart", restart = True, stats=self.split_statistics)
+                raise RestartException(f"\nBacktrack limit of {self.backtrack_limit} exceeded", restart = True, stats=self.split_statistics)
 
             return state
 
@@ -318,8 +308,43 @@ class Solver:
 
         return count
 
-    def chronological_backtracking(self):
-        pass # todo for versie 1
+    def chronological_backtracking(self) -> KnowledgeBase:
+        # reset infinite loop detection
+        self.cyclefree = defaultdict(int)
+
+        # find state values
+        # Find the first literal in the order that has a state in the stack
+        for last_literal in reversed(self.order):
+            if last_literal in self.stack:
+                break
+
+        choices = list(self.stack[last_literal].keys())
+
+        truth_assignment = random.choice(choices)
+
+        # find state
+        if (self.is_dependency_graph_active()):
+            state = self.stack[last_literal][truth_assignment]
+            state = self.data_manager.duplicate_knowledge_base(state, state.timestep, use_dependency_graph=self.is_dependency_graph_active())
+
+            # add problem clauses
+            self.add_problem_clauses_to_state(state)
+        else:
+            state = self.stack[last_literal].pop(truth_assignment)
+            if (len(self.stack[last_literal]) == 0):
+                # backtrack to most recent
+                del self.stack[last_literal]
+                self.order = self.order[:self.order.index(last_literal)+1]
+
+        return state
+
+    def is_dependency_graph_active(self) -> bool:
+        return self.heuristics["DependencyGraph"]
+
+    def is_heuristic2_active(self) -> bool:
+        return self.heuristics["Heuristiek2"]
+
+
 
 
     # def nr_of_binary_clauses(self, state):

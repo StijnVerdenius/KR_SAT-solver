@@ -42,7 +42,7 @@ class DataManager():
 
         return pickle.loads(pickle.dumps(obj, protocol=-1))
 
-    def duplicate_knowledge_base(self, base : KnowledgeBase, step : int):
+    def duplicate_knowledge_base(self, base : KnowledgeBase, step : int, use_dependency_graph=False):
         """ Deep copies a KB """
 
         clauses_ = self.personal_deepcopy(base.clauses)
@@ -50,9 +50,12 @@ class DataManager():
         bookkeeping_ = self.duplicate_default_dict(base.bookkeeping, self.duplicate_set, set)
 
         # dependency graph stuff
-        initial_ = self.duplicate_default_dict(base.dependency_graph.initial_coocurrence, self.duplicate_set, set)
-        graph_ = self.duplicate_default_dict(base.dependency_graph.graph, self.duplicate_set, set)
-        dependency_graph_ = DependencyGraph(initial=initial_, graph=graph_, existing_literals=list(set_literals_.keys()))
+        if (use_dependency_graph):
+            initial_ = self.duplicate_default_dict(base.dependency_graph.initial_coocurrence, self.duplicate_set, set)
+            graph_ = self.duplicate_default_dict(base.dependency_graph.graph, self.duplicate_set, set)
+            dependency_graph_ = DependencyGraph(initial=initial_, graph=graph_, existing_literals=list(set_literals_.keys()))
+        else:
+            dependency_graph_ = use_dependency_graph
 
         return KnowledgeBase(clauses=clauses_,
                              current_set_literals= set_literals_,

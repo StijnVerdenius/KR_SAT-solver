@@ -40,7 +40,7 @@ def read_text_sudoku(puzzle_path: str, puzzle_number: int, id: int) -> Tuple[Dic
 
             if (i == puzzle_number):
 
-                print(line)
+                # print(line)
 
                 line = line.replace("\n", "")
 

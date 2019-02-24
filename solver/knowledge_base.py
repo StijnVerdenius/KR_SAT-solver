@@ -56,8 +56,10 @@ class KnowledgeBase:
         # counts amount of clauses
         self.clause_counter = clause_counter
 
-        if dependency_graph == None:
+        if dependency_graph is None:
             self.dependency_graph = DependencyGraph(bookkeeping=self.bookkeeping, clauses = self.clauses)
+        elif dependency_graph is False:
+            pass
         else:
             self.dependency_graph = dependency_graph
 
@@ -71,23 +73,23 @@ class KnowledgeBase:
         """
         return len(self.clauses) < 1
 
-    def simplify(self, set_literals) -> Tuple[bool, int]:
+    def simplify(self, set_literals, use_dependency_graph) -> Tuple[bool, int]:
         """
         removes redundant information from knowledge base
         """
-        valid, potential_problem_potential_literals_set1 = self.simplify_unit_clauses(set_literals)
+        valid, potential_problem_potential_literals_set1 = self.simplify_unit_clauses(set_literals, use_dependency_graph)
         if not valid:
             return valid, potential_problem_potential_literals_set1
-        valid, potential_problem_potential_literals_set2 = self.simplify_pure_literal(set_literals)
+        valid, potential_problem_potential_literals_set2 = self.simplify_pure_literal(set_literals, use_dependency_graph)
         if not valid:
             return valid, potential_problem_potential_literals_set2
 
         if sum([potential_problem_potential_literals_set1, potential_problem_potential_literals_set2]) > 0:
-            return self.simplify(set_literals)
+            return self.simplify(set_literals, use_dependency_graph)
 
         return True, 0
 
-    def simplify_unit_clauses(self, set_literals) -> Tuple[bool, int]:
+    def simplify_unit_clauses(self, set_literals, use_dependency_graph) -> Tuple[bool, int]:
         """
         simplifies knowledge base for unit clauses
         """
@@ -101,18 +103,18 @@ class KnowledgeBase:
 
             truth_value = literal > 0
             set_literals.append(literal)
-            valid, potential_problem = self.set_literal(literal, truth_value)
+            valid, potential_problem = self.set_literal(literal, truth_value, dependency_graph=use_dependency_graph)
 
             literals_set += 1
             if not valid:
                 return valid, potential_problem
 
         if (literals_set > 0):
-            return self.simplify_unit_clauses(set_literals)
+            return self.simplify_unit_clauses(set_literals, use_dependency_graph)
 
         return True, literals_set
 
-    def simplify_pure_literal(self, set_literals) -> Tuple[bool, int]:
+    def simplify_pure_literal(self, set_literals, use_dependency_graph) -> Tuple[bool, int]:
         """
         simplifies knowledge base for pure literals
         """
@@ -133,7 +135,7 @@ class KnowledgeBase:
             if len(attempt) == 1:
                 value = attempt.pop()
                 set_literals.append(literal)
-                valid, potential_problem = self.set_literal(literal, value)
+                valid, potential_problem = self.set_literal(literal, value, dependency_graph=use_dependency_graph)
                 if not valid:
                     return valid, potential_problem
                 else:
@@ -156,7 +158,7 @@ class KnowledgeBase:
         print(f"Tautology simplify removed {removed} clauses")
 
 
-    def set_literal(self, literal: int, truth_value: bool, split=False) -> Tuple[bool, int]:
+    def set_literal(self, literal: int, truth_value: bool, split=False, dependency_graph=False) -> Tuple[bool, int]:
         """
         Set a literal and its boolean value
         :param literal:
@@ -168,7 +170,8 @@ class KnowledgeBase:
         # First check if this is a allowed op.
         abs_literal = abs(literal)
 
-        self.dependency_graph.add_literal(abs_literal, split=split)
+        if (dependency_graph):
+            self.dependency_graph.add_literal(abs_literal, split=split)
 
         # Set literal
         self.current_set_literals[abs_literal] = truth_value
