@@ -1,5 +1,9 @@
+import os
 from collections import namedtuple
 from typing import List
+
+from solver.data_management import DataManager
+
 try:
     import numpy as np
     import seaborn as sns
@@ -11,24 +15,20 @@ except ImportError as e:
 Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
 
 def show_stats(sudokus_stats):
-    max_splits = max(len(split_stats[0]) for split_stats in sudokus_stats)
-
-    y = np.zeros((len(sudokus_stats), max_splits))
-    y = pd.DataFrame(data=y)
-
     literal_cnts = []
     clause_cnts = []
     sudoku_nrs = []
     xs = []
     algorithms = []
-    for splits, sudoku_nr in sudokus_stats:
+    algorithm_names = {2: 'CDCL', 3: 'Look-Ahead'}
+    for splits, sudoku_nr, program_version in sudokus_stats:
         x = 0
         for j, split in enumerate(splits):
             literal_cnts.append(split.literal_cnt)
             clause_cnts.append(split.clause_cnt)
             sudoku_nrs.append(sudoku_nr)
             xs.append(x)
-            algorithms.append('FAST')
+            algorithms.append(algorithm_names[program_version])
 
             x += 1
             # y[i, j] = split.literal_cnt
@@ -112,3 +112,5 @@ def print_stats(splits_statistics: List[Split]):
     plt.show()
 
     print(f"{'-' * 10} Statistics {'-' * 10}")
+
+

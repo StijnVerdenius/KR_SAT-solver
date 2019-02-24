@@ -4,6 +4,7 @@ import cProfile, pstats, io
 from multiprocessing import Pool
 
 from solver.dimacs_write import to_dimacs_str
+from solver.lookaheadsolver import LookAHeadSolver
 from solver.read import read_rules_dimacs as read_rules
 from solver.read import read_text_sudoku as read_problem
 from solver.solver import *
@@ -44,6 +45,9 @@ def get_settings(program_version: int):
     if (program_version > 4):
         raise Exception("Program version should be between 1-4")
 
+    if program_version == 3:
+        return {}
+
     settings = {key: False for key in ["DependencyGraph", "Heuristiek2"]}
     if (program_version == 1):
         pass
@@ -56,8 +60,11 @@ def get_settings(program_version: int):
 
 
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
-    profile = True
+    profile = False
     multiprocessing = False
+
+
+    problems = range(0,10)
 
     if profile:
         pr = cProfile.Profile()
@@ -69,53 +76,55 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         sudokus_stats = list(filter(lambda x: x is not None, results))
         return
 
-    settings = get_settings(program_version)
 
-    print("SETTINGS:", settings)
 
-    # problems = range(0, 1000)
-    problems = range(0,100)
+    for program_version in [2, 3]:
+        settings = get_settings(program_version)
+        print("SETTINGS:", settings)
 
-    sudokus_stats = []
-    for problem_id in problems:
+        sudokus_stats = []
+        for problem_id in problems:
 
-        start = True
+            start = True
+            split_statistics = []
+            while(start):
+                start = False
 
-        split_statistics = []
+                try:
+                    print(f"\nStarting solving problem {problem_id}")
+                    print("Loading problem...")
+                    rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
+                    rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
 
-        while(start):
+                    all_clauses = {**rules_clauses, **rules_puzzle}
 
-            start = False
+                    # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
+                    knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
+                    print("Problem loaded")
 
-            try:
+                    if program_version == 3:
+                        solver = LookAHeadSolver(knowledge_base)
+                    else:
+                        solver = Solver(knowledge_base, split_stats=split_statistics, heuristics=settings)
 
-                print(f"\nStarting solving problem {problem_id}")
-                print("Loading problem...")
-                rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
-                rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
+                    solution, solved, split_statistics = solver.solve_instance()
 
-                all_clauses = {**rules_clauses, **rules_puzzle}
+                    sudokus_stats.append((split_statistics, problem_id, program_version))
 
-                # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
-                knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
-                print("Problem loaded")
-                solver = Solver(knowledge_base, split_stats=split_statistics, heuristics=settings)
+                    print_sudoku(solution)
+                    # print_stats(split_statistics)
+                    dimacs = to_dimacs_str(solution)
 
-                solution, solved, split_statistics = solver.solve_instance()
+                except RestartException as e:
 
-                sudokus_stats.append((split_statistics, problem_id))
+                    start = e.restart
 
-                print_sudoku(solution)
-                # print_stats(split_statistics)
-                dimacs = to_dimacs_str(solution)
+                    if (start):
+                        print(f"Restarted {problem_id}")
+                        split_statistics = e.stats
 
-            except RestartException as e:
-
-                start = e.restart
-
-                if (start):
-                    print(f"Restarted {problem_id}")
-                    split_statistics = e.stats
+        dm = DataManager(os.getcwd() + '/results/')
+        dm.save_python_obj(sudokus_stats, f"experiment-v{program_version}")
 
     if profile:
         pr.disable()
@@ -124,8 +133,6 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
         ps.print_stats()
         print(s.getvalue())
-
-    show_stats(sudokus_stats)
 
 
 
@@ -171,4 +178,4 @@ if __name__ == "__main__":
         input_file = sys.argv[2]
 
     # main(program_version, input_file)
-    develop(0, input_file, os.getcwd() + "/data/sudokus/1000sudokus.txt")
+    develop(3, input_file, os.getcwd() + "/data/sudokus/1000sudokus.txt")

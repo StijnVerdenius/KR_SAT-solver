@@ -1,5 +1,5 @@
 try:
-    import _pickle as pickle
+    import pickle as pickle
 except ImportError:
     raise RuntimeError("Please install _pickle")
 
@@ -22,7 +22,8 @@ class DataManager():
             with open(self.directory + name+".pickle", 'wb') as handle:
                 pickle.dump(obj, handle, protocol=pickle.HIGHEST_PROTOCOL)
             print("Saved {}".format(name))
-        except:
+        except Exception as e:
+            print(e)
             print("Failed saving {}, continue anyway".format(name))
 
     def load_python_obj(self, name):

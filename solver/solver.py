@@ -43,11 +43,6 @@ class Solver:
         # counts clauses
         self.clause_counter = self.initial.clause_counter
 
-        # todo: max ??
-        self.nr_of_splits = 0
-        self.total_literals = knowledge_base.literal_counter
-        self.failed_literals = 0
-
         # tracks whether backtrack mode is ctive
         self.backtrack_mode_active = False
 

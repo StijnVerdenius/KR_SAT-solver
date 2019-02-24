@@ -164,8 +164,8 @@ class KnowledgeBase:
         :param literal:
         :param truth_value:
         """
-
-        # print(f"set {literal} to {truth_value}")#, with current: {self.current_set_literals}")
+        if literal in self.current_set_literals and self.current_set_literals[literal] == truth_value:
+            return True, 0
 
         # First check if this is a allowed op.
         abs_literal = abs(literal)
@@ -290,3 +290,6 @@ class KnowledgeBase:
         self.clauses[id] = clause
         self.clause_counter += 1
         return True
+
+    def nr_of_binary_clauses(self):
+        return sum((1 for clause in self.clauses.values() if len(clause.literals) == 2))
