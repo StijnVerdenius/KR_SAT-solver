@@ -45,7 +45,7 @@ class Solver:
 
                 runtime = timeit.default_timer() - start
                 if runtime > 30:
-                    raise RunningTimeException(f"!!! SKIPPING SUDOKU. Time is out, runtime:{runtime} !!!")
+                    # raise RunningTimeException(f"!!! SKIPPING SUDOKU. Time is out, runtime:{runtime} !!!")
                     pass
 
                 if count % 1 == 0:
@@ -76,33 +76,25 @@ class Solver:
                 return current_state, True, split_statistics
             else:
                 # split
-                future_states = self.possible_splits(current_state)
-                # stack = self.concat(future_states, stack)
+                future_states = self.split(current_state)
                 stack = itertools.chain(future_states, stack)
 
-    def possible_splits(self, current_state: KnowledgeBase) -> Generator[KnowledgeBase, None, None]:
+    def split(self, current_state: KnowledgeBase) -> Generator[KnowledgeBase, None, None]:
         """
-        Generator for possible splits given a current knowledge base and its current truth value assignments
+        Splits current state with values {False, True}, for a certain literal
 
         :param current_state:
         :return:
         """
-        set_literals = set()
         iterator = self.look_ahead(current_state)
 
-        for literal, choice in iterator:
-            if literal is None:
-                solved, _ = current_state.validate()
-                if solved:
-                    raise Exception("LoL")
-                # print("Returning")
+        for new_state, literal, choice in iterator:
+            if literal is None or new_state is None:
                 return
-
-            # for choice in [True, False]:
-            # print(f"Choice: {literal}={choice}")
+            current_state = new_state
 
             # do split
-            new_state = self.saver.deepcopy_knowledge_base(new_state)
+            new_state = self.saver.deepcopy_knowledge_base(current_state)
             valid = new_state.set_literal(literal, choice)
             if not valid:
                 self.failed_literals += 1
@@ -112,27 +104,37 @@ class Solver:
             yield new_state
 
     def look_ahead(self, current_state):
+        """
+        Look ahead of the current state
+        And set any forced literals
+        Returns the most promising branch according to a heuristic
+        :param current_state:
+        :return:
+        """
         heuristic = {}
-        f = current_state
-        for literal in self.preselect(current_state):
-            fprime = self.saver.deepcopy_knowledge_base(current_state)
+        f: KnowledgeBase = current_state
+        for literal in self.preselect(f):
+            if literal in f.current_set_literals:
+                continue
+
+            fprime = self.saver.deepcopy_knowledge_base(f)
             valid1 = fprime.set_literal(literal, False)
             if valid1:
                 valid1 = fprime.simplify()
 
-            if valid1 and self.nr_of_binary_clauses(fprime) - 65 > self.nr_of_binary_clauses(f):
+            if valid1 and fprime.nr_of_binary_clauses() - 65 > f.nr_of_binary_clauses():
                 fprime, valid1 = self.double_look(fprime)
 
-            fdprime = self.saver.deepcopy_knowledge_base(current_state)
+            fdprime = self.saver.deepcopy_knowledge_base(f)
             valid2 = fdprime.set_literal(literal, True)
             if valid2:
                 valid2 = fdprime.simplify()
 
-            if valid2 and self.nr_of_binary_clauses(fdprime) - 65 > self.nr_of_binary_clauses(f):
+            if valid2 and fdprime.nr_of_binary_clauses() - 65 > f.nr_of_binary_clauses():
                 fdprime, valid2 = self.double_look(fdprime)
 
             if not valid1 and not valid2:
-                return [(None, None),]
+                return [(None, None, None),]
             elif not valid1:
                 self.failed_literals += 1
                 f = fdprime
@@ -148,28 +150,26 @@ class Solver:
                     diff_f_prime,
                 )
 
-        # print(heuristic)
-        # print(f"Heuristic len: {len(heuristic)}")
-        # Return highest value in heuristic
         if len(heuristic) == 0:
-            # print(f"Restarting look ahead!!!!")
-            # count_dict = defaultdict(int)
-            # for clause in current_state.clauses.values():
-            #     count_dict[len(clause)] += 1
-            #
-            # print(count_dict)
-            return [(None, None),]
-            # self.look_ahead(current_state)
+            return [(None, None, None),]
 
         literal, heuristic_vals = max(heuristic.items(), key=lambda kv: kv[1][0])
         if heuristic_vals[1] > heuristic_vals[2]:
-            return [(literal, True), (literal, False)]
+            return [(f, literal, True), (f, literal, False)]
         else:
-            return [(literal, False), (literal, True)]
+            return [(f, literal, False), (f, literal, True)]
 
     def double_look(self, current_state):
+        """
+        Look ahead of the current state again, and set any forced literals.
+        :param current_state:
+        :return:
+        """
         f = current_state
         for literal in self.preselect(current_state):
+            if literal in f.current_set_literals:
+                continue
+
             fprime = self.saver.deepcopy_knowledge_base(current_state)
             valid1 = fprime.set_literal(literal, False)
             if valid1:
@@ -190,6 +190,10 @@ class Solver:
         return f, True
 
     def diff(self, state, new_state):
+        """
+        Returns a heuristic value by comparing two states, implements Clause reduction heuristic (CRH).
+        A higher heuristic value means this state is more promising.
+        """
         # Clause reduction heuristic
         gammas = {2: 1, 3: 0.2, 4: 0.05, 5: 0.01, 6: 0.003}
         for k in range(7, 10):
@@ -206,37 +210,22 @@ class Solver:
 
         heuristic = sum(abs(count_dict_new_state[k] - count_dict_state[k]) * gammas[k] for k in range(2, 10))
 
-        # all_lits = [clause.literals for clause in state.clauses.values()]
-        # for clause in new_state.clauses.values():
-        #     if clause.literals in all_lits:
-        #         k = len(clause.literals)
-        #         if k in gammas:
-        #             gamma = gammas[k]
-        #         else:
-        #             gamma = 20.4514 * 0.218673 ** k
-        #
-        #         sum += gamma * 1
-
-        # nr_clauses = sum((1 for clause in state.clauses.values() if len(clause.literals) == 2))
-        # nr_clauses_other = sum((1 for clause in new_state.clauses.values() if len(clause.literals) == 2))
-
-        # nr_clauses = len(state.clauses)
-        # nr_clauses_other = len(new_state.clauses)
-        # heur = nr_clauses_other - nr_clauses
-
         return heuristic
 
     def preselect(self, current_state, mu=5, gamma=7):
+        """
+        Return a set of P literals, returns a maximum amount of literals max_items
+        Literals returned are the literals that have the most occurrences in all clauses.
+        :param current_state:
+        :param mu: The minimum number of literals returned (if so many are not yet set)
+        :param gamma: Determines how heavy to factor in the amount of splits done so far.
+        """
         items = 0
         n = self.nr_of_splits
         n = max(1, n)
         max_items = int(mu + (gamma / n) + self.failed_literals)
         all_lits = list(current_state.bookkeeping.items())
 
-        # print(f"Max items: {max_items}, failed_literals: {self.failed_literals}, total_lits:, nr_of_splits:{self.nr_of_splits}")
-        # allowed_lits = list(set(current_state.bookkeeping.keys()))
-        # random.shuffle(allowed_lits)
-        # for literal in allowed_lits:
         for literal, _ in sorted(all_lits, key=lambda kv: len(kv[1])):
             if literal in current_state.current_set_literals:
                 continue
@@ -244,20 +233,8 @@ class Solver:
             yield literal
 
             items += 1
-            if items == max_items and self.nr_of_splits > 1:
+            if items == max_items:
                 break
-
-
-    def concat(self, a, b):
-        """
-        Helper function to concatenate generator outputs
-
-        :param a:
-        :param b:
-        """
-
-        yield from a
-        yield from b
 
     def nr_of_binary_clauses(self, state):
         return sum((1 for clause in state.clauses.values() if len(clause.literals) == 2))

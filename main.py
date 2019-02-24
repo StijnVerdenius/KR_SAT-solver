@@ -2,6 +2,7 @@ import sys
 import os
 import cProfile, pstats, io
 from multiprocessing import Pool
+import timeit
 
 from solver.dimacs_write import to_dimacs_str
 from solver.knowledge_base import KnowledgeBase
@@ -40,17 +41,19 @@ def main(program_version: int, rules_dimacs_file_path: str):
 
 
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
-    profile = True
+    profile = False
 
     if profile:
         pr = cProfile.Profile()
         pr.enable()
 
-    problems = range(0, 1)
+    problems = range(0, 20)
+    start = timeit.default_timer()
 
     # p = Pool(12)
     # results = p.map(solve_sudoku, problems)
     # sudokus_stats = list(filter(lambda x: x is not None, results))
+
 
     sudokus_stats = []
     for problem_id in problems:
@@ -78,6 +81,9 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         dimacs = to_dimacs_str(solution)
 
     show_stats(sudokus_stats)
+    runtime = timeit.default_timer() - start
+
+    print(f"Solved {len(problems)} sudokus in {runtime}")
 
     if profile:
         pr.disable()

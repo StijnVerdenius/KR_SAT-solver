@@ -146,6 +146,8 @@ class KnowledgeBase:
         :param literal:
         :param truth_value:
         """
+        if literal in self.current_set_literals and self.current_set_literals[literal] == truth_value:
+            return True
 
         # First check if this is a allowed op.
         abs_literal = abs(literal)
@@ -198,6 +200,9 @@ class KnowledgeBase:
                 self.bookkeeping[abs_literal].remove(clause.id)
                 if len(self.bookkeeping[abs_literal]) == 0:
                     del self.bookkeeping[abs_literal]
+
+    def nr_of_binary_clauses(self) -> int:
+        return sum((1 for clause in self.clauses.values() if len(clause.literals) == 2))
 
     def __str__(self):
         return str({"bookkeeping" : self.bookkeeping, "current_set_literals" : self.current_set_literals, "clause_counter" : self.clause_counter, "clauses" : self.clauses})
