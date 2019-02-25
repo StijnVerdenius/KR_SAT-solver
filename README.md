@@ -2,6 +2,18 @@
 SAT-solver for course Knowledge Representation
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 TODO list:
 
 - maak SAT.sh

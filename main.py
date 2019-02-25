@@ -145,7 +145,6 @@ def enforce_python_version():
     if (inf[0] < 3 or inf[1] < 5):
         raise Exception("\n\n####################\nMake sure correct version of python is installed (3.5 or higher)\n####################\n\n")
 
-
 if __name__ == "__main__":
 
     enforce_python_version()
