@@ -17,6 +17,7 @@ if __name__ == "__main__":
     # sudokus_stats = map(add, sudokus_stats)
 
     sudokus_stats += dm.load_python_obj('experiment-v2')
+    sudokus_stats += dm.load_python_obj('experiment-v1')
     # add = partial(add_version_number, vn=2)
     # sudokus_stats2 = map(add, sudokus_stats)
 
