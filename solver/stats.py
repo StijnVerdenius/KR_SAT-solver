@@ -20,31 +20,42 @@ def show_stats(sudokus_stats):
     sudoku_nrs = []
     xs = []
     algorithms = []
-    algorithm_names = {2: 'CDCL', 3: 'Look-Ahead'}
+    algorithm_names = {1: 'DPLL', 2: 'CDCL', 3: 'Look-Ahead'}
 
     nr_of_splits = []
     versions = []
     sudokus = []
+    ratios = []
+    runtimes = []
+    runtimes_len = []
     for splits, sudoku_nr, program_version in sudokus_stats:
         nr_of_splits.append(len(splits))
         versions.append(algorithm_names[program_version])
         sudokus.append(sudoku_nr)
+        runtimes_len.append(splits[-1].time_elapsed)
 
         x = 0
         for j, split in enumerate(splits):
             literal_cnts.append(split.literal_cnt)
             clause_cnts.append(split.clause_cnt)
+            runtimes.append(split.time_elapsed)
             sudoku_nrs.append(sudoku_nr)
+
+            if split.literal_cnt == 0:
+                ratios.append(0)
+            else:
+                ratios.append(split.clause_cnt / split.literal_cnt)
+
             xs.append(x)
             algorithms.append(algorithm_names[program_version])
 
             x += 1
             # y[i, j] = split.literal_cnt
 
-    d = {'Literals': literal_cnts, 'Clauses':clause_cnts, 'Sudoku': sudoku_nrs, 'Splits': xs, 'Algorithm': algorithms}
+    d = {'Literals': literal_cnts, 'Ratio clauses to variables': ratios, 'Clauses':clause_cnts, 'Sudoku': sudoku_nrs, 'Splits': xs, 'Algorithm': algorithms, 'Runtime': runtimes}
     df = pd.DataFrame(data=d)
 
-    df_split_len = pd.DataFrame(data={'Splits': nr_of_splits, 'Sudoku': sudokus, 'Algorithm': versions})
+    df_split_len = pd.DataFrame(data={'Splits': nr_of_splits, 'Sudoku': sudokus, 'Runtime': runtimes_len, 'Algorithm': versions})
 
     # print(df)
     # sns.lineplot(x="Splits", y='Literals', data=df)
@@ -62,33 +73,78 @@ def show_stats(sudokus_stats):
     # plt.ylabel("Clauses")
     # plt.show()
 
-    sns.lineplot(x="Splits", y='Literals', data=df, hue='Algorithm')
-    plt.xlabel("Splits")
-    plt.ylabel("Literals")
-    plt.show()
-
-    sns.lineplot(x="Splits", y='Clauses', data=df, hue='Algorithm')
-    plt.xlabel("Splits")
-    plt.ylabel("Clauses")
-    plt.show()
-
-    sns.stripplot(x="Sudoku", y="Splits", hue="Algorithm", data=df_split_len)
-    plt.show()
-
-    sns.stripplot(x="Algorithm", y="Splits", data=df_split_len)
-    plt.show()
-
-    sns.violinplot(x="Algorithm", y="Splits", data=df_split_len)
-    plt.show()
-
-    # sns.scatterplot(x="Literals", y="Clauses", hue="Algorithm", data=df)
+    # sns.lineplot(x="Splits", y='Literals', data=df, hue='Algorithm')
+    # plt.xlabel("Splits")
+    # plt.ylabel("Literals")
+    # plt.show()
+    #
+    # sns.lineplot(x="Splits", y='Clauses', data=df, hue='Algorithm')
+    # plt.xlabel("Splits")
+    # plt.ylabel("Clauses")
     # plt.show()
 
-    sns.barplot(x="Sudoku", y='Splits', data=df_split_len, hue='Algorithm')
-    plt.show()
+    # sns.lineplot(x="Splits", y='Ratio clauses to variables', data=df, hue='Algorithm')
+    # plt.xlim([0, 500])
+    # plt.show()
+    #
+    # sns.lineplot(x="Runtime", y='Ratio clauses to variables', data=df, hue='Algorithm')
+    # plt.xlim([0, 50])
+    # plt.show()
+    #
+    # sns.lineplot(x="Runtime", y='Clauses', data=df, hue='Algorithm')
+    # plt.xlim([0, 50])
+    # plt.show()
+    #
+    # sns.lineplot(x="Runtime", y='Literals', data=df, hue='Algorithm')
+    # plt.xlim([0, 50])
+    # plt.show()
+    #
+    # sns.stripplot(x="Sudoku", y="Splits", hue="Algorithm", data=df_split_len)
+    # plt.xlim([0, 500])
+    # plt.show()
+    #
+    # sns.stripplot(x="Algorithm", y="Splits", data=df_split_len)
+    # plt.xlim([0, 500])
+    # plt.show()
+    #
+    # sns.violinplot(x="Algorithm", y="Splits", data=df_split_len)
+    # plt.xlim([0, 500])
+    # plt.show()
+    #
+    # sns.scatterplot(x="Literals", y="Clauses", hue="Algorithm", data=df)
+    # plt.show()
+    #
+    # sns.barplot(x="Sudoku", y='Splits', data=df_split_len, hue='Algorithm')
+    # plt.ylim([0, 500])
+    # plt.show()
+    #
+    # sns.boxenplot(y="Splits", x="Algorithm",  data=df_split_len)
+    # plt.ylim([0, 500])
+    # plt.show()
 
-    sns.boxenplot(y="Splits", x="Algorithm",  data=df_split_len)
-    plt.show()
+    groups = df_split_len.groupby(["Algorithm"])
+    print("median", groups.median())
+    print("\n")
+    print("variance", groups.var())
+    print("\n")
+    print("mean", groups.mean())
+    print("\n")
+    print("min", groups.min())
+    print("\n")
+    print("max", groups.max())
+
+
+    print("\n")
+    groups = df.groupby(["Algorithm"])
+    print("median", groups.median())
+    print("\n")
+    print("variance", groups.var())
+    print("\n")
+    print("mean", groups.mean())
+    print("\n")
+    print("min", groups.min())
+    print("\n")
+    print("max", groups.max())
 
     for name in algorithm_names.values():
         splits_dist_items = df_split_len[df_split_len["Algorithm"] == name]
