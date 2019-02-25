@@ -5,11 +5,11 @@ from functools import partial
 from multiprocessing import Pool
 
 from solver.dimacs_write import to_dimacs_str
-from solver.lookaheadsolver import LookAHeadSolver
+from solver.solver_lookahead import LookAHeadSolver
 from solver.read import read_rules_dimacs as read_rules
 from solver.read import read_text_sudoku as read_problem
 from solver.running_time_exception import RunningTimeException
-from solver.solver import *
+from solver.solver_cdcl_dpll import *
 from solver.stats import print_stats, show_stats
 from solver.visualizer import print_sudoku
 from solver.restart_exception import RestartException
@@ -45,7 +45,7 @@ def main(program_version: int, rules_dimacs_file_path: str):
     knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
 
     # init solver
-    solver = Solver(knowledge_base)
+    solver = CDCL_DPLL_Solver(knowledge_base)
 
     # retrieve solution
     solution, solved, stats = solver.solve_instance()
@@ -85,7 +85,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
     profile = False
     multiprocessing = False
 
-    problems = range(0,999)
+    problems = range(0,10)
 
     if profile:
         pr = cProfile.Profile()
@@ -129,18 +129,18 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
             print(f"\nStarting solving problem {problem_id}, program_version: {program_version}")
             print("Loading problem...")
             rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
-            # rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
+            rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
 
-            # all_clauses = {**rules_clauses, **rules_puzzle}
+            all_clauses = {**rules_clauses, **rules_puzzle}
 
             # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
-            knowledge_base = KnowledgeBase(rules_clauses, clause_counter=last_id)
+            knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
             print("Problem loaded")
 
             if settings["Lookahead"]:
                 solver = LookAHeadSolver(knowledge_base)
             else:
-                solver = Solver(knowledge_base, split_stats=split_statistics, heuristics=settings, problem_id=problem_id, start=runtime)
+                solver = CDCL_DPLL_Solver(knowledge_base, split_stats=split_statistics, heuristics=settings, problem_id=problem_id, start=runtime)
 
             try:
                 solution, solved, split_statistics = solver.solve_instance()
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     input_file = os.getcwd() + "/data/sudoku-rules.txt"
 
     # main(program_version, input_file)
-    develop(program_version, input_file, os.getcwd() + "/data/sudokus/1000sudokus.txt")
+    develop(program_version, input_file, os.getcwd() + "/data/sudokus/1000sudokus.txt")  # TODO: develop -> main
 
     # exit
     sys.exit(0)

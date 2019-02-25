@@ -5,19 +5,17 @@ from typing import Tuple, List, Generator
 from solver.data_management import DataManager
 from solver.knowledge_base import KnowledgeBase
 import timeit
+from solver.solver import Solver
 
 
-class LookAHeadSolver:
-    def __init__(self, knowledge_base: KnowledgeBase):
+class LookAHeadSolver(Solver):
+    def __init__(self, knowledge_base: KnowledgeBase, problem_id=None):
+
+        super().__init__(knowledge_base, problem_id)
         self.initial = knowledge_base
-        self.saver = DataManager("./temp/")
         self.nr_of_splits = 0
         self.total_literals = knowledge_base.literal_counter
         self.failed_literals = 0
-        self.start = 0
-
-    def get_elapsed_runtime(self):
-        return timeit.default_timer() - self.start
 
     def solve_instance(self) -> Tuple[KnowledgeBase, bool, List]:
         """ main function for solving knowledge base """
@@ -39,19 +37,14 @@ class LookAHeadSolver:
                 current_state: KnowledgeBase = next(stack)
 
                 self.nr_of_splits += 1
+
                 # inform user of progress
+                count = self.inform_user(current_state, count, self.start)
 
-                runtime = timeit.default_timer() - self.start
-                if runtime > 30:
-                    # raise RunningTimeException(f"!!! SKIPPING SUDOKU. Time is out, runtime:{runtime} !!!")
-                    pass
-
-                if count % 1 == 0:
-                    count = 1
-                    print(f"\rLength solution: {len(current_state.current_set_literals)} out of {current_state.literal_counter} runtime: {runtime}", end='')
+                # add stats
+                self.split_statistics.append(current_state.split_statistics(self.get_elapsed_runtime()))
             except StopIteration:
                 raise Exception("Sudoku solving failed")
-                return current_state, False, self.split_statistics
 
             # check for solution
             solved = current_state.validate()
@@ -59,7 +52,6 @@ class LookAHeadSolver:
                 # found solution
                 print("\nSolved")
                 return current_state, True, self.split_statistics
-            self.split_statistics.append(current_state.split_statistics(self.get_elapsed_runtime()))
 
             # simplify
             valid = current_state.simplify([], False)
@@ -92,7 +84,7 @@ class LookAHeadSolver:
             current_state: KnowledgeBase = new_state
 
             # do split
-            new_state = self.saver.duplicate_knowledge_base(current_state, -1, False)
+            new_state = self.data_manager.duplicate_knowledge_base(current_state, -1, False)
             valid = new_state.set_literal(literal, choice)[0]
             if not valid:
                 self.failed_literals += 1
@@ -115,7 +107,7 @@ class LookAHeadSolver:
             # if literal in f.current_set_literals:
             #     continue
 
-            fprime = self.saver.duplicate_knowledge_base(f, -1, False)
+            fprime = self.data_manager.duplicate_knowledge_base(f, -1, False)
             valid1 = fprime.set_literal(literal, False)[0]
             if valid1:
                 valid1 = fprime.simplify([], False)[0]
@@ -124,7 +116,7 @@ class LookAHeadSolver:
             if valid1 and fprime.nr_of_binary_clauses() - 65 > f.nr_of_binary_clauses():
                 fprime, valid1 = self.double_look(fprime)
 
-            fdprime = self.saver.duplicate_knowledge_base(f, -1, False)
+            fdprime = self.data_manager.duplicate_knowledge_base(f, -1, False)
             valid2 = fdprime.set_literal(literal, True)[0]
             if valid2:
                 valid2 = fdprime.simplify([], False)[0]
@@ -170,13 +162,13 @@ class LookAHeadSolver:
             if literal in f.current_set_literals:
                 continue
 
-            fprime = self.saver.duplicate_knowledge_base(f, -1, False)
+            fprime = self.data_manager.duplicate_knowledge_base(f, -1, False)
             valid1 = fprime.set_literal(literal, False)[0]
             if valid1:
                 valid1 = fprime.simplify([], False)[0]
             self.split_statistics.append(fprime.split_statistics(self.get_elapsed_runtime()))
 
-            fdprime = self.saver.duplicate_knowledge_base(f, -1, False)
+            fdprime = self.data_manager.duplicate_knowledge_base(f, -1, False)
             valid2 = fdprime.set_literal(literal, True)[0]
             if valid2:
                 valid2 = fdprime.simplify([], False)[0]
