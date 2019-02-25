@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
     enforce_python_version()
 
-    program_version, input_file = parse_arguments(sys.argv)
+    # program_version, input_file = parse_arguments(sys.argv) # TODO: uncomment
 
     # DEFAULT vars:
     program_version = 1 # TODO: REMOVE DEFAULT
