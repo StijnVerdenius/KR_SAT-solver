@@ -239,3 +239,4 @@ class LookAHeadSolver:
             items += 1
             if items == max_items:
                 break
+

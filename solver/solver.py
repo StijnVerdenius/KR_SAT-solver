@@ -96,7 +96,6 @@ class Solver:
         self.stack["init"] = {True : current_state, False: current_state}
 
         while (not solved):
-
             count += 1
 
             # get next entry from stack
