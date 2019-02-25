@@ -18,13 +18,10 @@ except ImportError:
 import timeit
 
 
-# class RunningTimeException(Exception):
-#     pass
-
 
 class Solver:
 
-    def __init__(self, knowledge_base: KnowledgeBase, split_stats=None, heuristics=None, problem_id=None):
+    def __init__(self, knowledge_base: KnowledgeBase, split_stats=None, heuristics=None, problem_id=None, start=None):
 
         self.problem_id = problem_id
 
@@ -69,6 +66,10 @@ class Solver:
         # keeps track of which timestep was backtracked too last
         self.cyclefree = defaultdict(int)
 
+        self.start = start
+
+
+
     def solve_instance(self) -> Tuple[KnowledgeBase, bool, List]:
         """
         ##################
@@ -81,7 +82,8 @@ class Solver:
         self.nr_of_splits = -1
 
         # start timing
-        start = timeit.default_timer()
+        if (self.start is None):
+            self.start = timeit.default_timer()
         
         # Check tautology (part of simplify, but only done once)
         self.initial.simplify_tautology()
@@ -101,8 +103,8 @@ class Solver:
             current_state : KnowledgeBase = self.get_next_state()
 
             # user & statistics
-            count = self.inform_user(current_state, count, start)
-            self.split_statistics.append(current_state.split_statistics())
+            count = self.inform_user(current_state, count, self.start)
+            self.split_statistics.append(current_state.split_statistics(self.get_elapsed_runtime()))
 
             # check for solution
             solved = current_state.validate()
@@ -174,7 +176,7 @@ class Solver:
 
         self.timestep += 1
 
-        # choose a literal todo: heuristiek ipv random
+        # choose a literal
         literal = random.choice(list(current_state.bookkeeping.keys()))
         while literal in current_state.current_set_literals:
             literal = random.choice(list(current_state.bookkeeping.keys()))
@@ -237,7 +239,7 @@ class Solver:
                     state = self.data_manager.duplicate_knowledge_base(stack_state, stack_state.timestep, use_dependency_graph=self.is_dependency_graph_active())
                     break
 
-            self.add_problem_clauses_to_state(state) ## todo : reference before assignment risk
+            self.add_problem_clauses_to_state(state)
 
             # Remove literals that came after from self.order
             after = self.order[order_index + 1:]
@@ -253,9 +255,12 @@ class Solver:
             if (self.cyclefree[state.timestep] > self.backtrack_limit):
 
                 # restart if so
-                raise RestartException(f"\nBacktrack limit of {self.backtrack_limit} exceeded", restart = True, stats=self.split_statistics)
+                raise RestartException(f"\nBacktrack limit of {self.backtrack_limit} exceeded", restart = True, stats=self.split_statistics, elapsed_runtime=self.get_elapsed_runtime())
 
             return state
+
+    def get_elapsed_runtime(self):
+        return timeit.default_timer() - self.start
 
 
     def lookup_backtrack_literal(self, problem_clause):
@@ -280,7 +285,7 @@ class Solver:
                     if literal in self.stack and len(self.stack[literal]):
                         return literal, order_index2
 
-        raise RestartException("Could not find backtrack literal!", restart=True, stats=self.split_statistics)
+        raise RestartException("Could not find backtrack literal!", restart=True, stats=self.split_statistics, elapsed_runtime=self.get_elapsed_runtime())
 
     def add_problem_clauses_to_state(self, state):
         """
@@ -291,7 +296,7 @@ class Solver:
         """
         valid = state.add_clauses(self.data_manager.personal_deepcopy(self.problem_clauses))
         if (not valid):
-            raise RestartException("Adding clauses led to invalid addition!", restart=True, stats=self.split_statistics)
+            raise RestartException("Adding clauses led to invalid addition!", restart=True, stats=self.split_statistics, elapsed_runtime=self.get_elapsed_runtime())
 
 
     def inform_user(self, state : KnowledgeBase, count, start):
@@ -340,7 +345,5 @@ class Solver:
     def is_dependency_graph_active(self) -> bool:
         return self.heuristics["DependencyGraph"]
 
-    def is_heuristic2_active(self) -> bool:
-        return self.heuristics["Heuristiek2"]
 
 

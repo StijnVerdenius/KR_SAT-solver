@@ -8,6 +8,7 @@ from solver.dimacs_write import to_dimacs_str
 from solver.lookaheadsolver import LookAHeadSolver
 from solver.read import read_rules_dimacs as read_rules
 from solver.read import read_text_sudoku as read_problem
+from solver.running_time_exception import RunningTimeException
 from solver.solver import *
 from solver.stats import print_stats, show_stats
 from solver.visualizer import print_sudoku
@@ -43,29 +44,24 @@ def main(program_version: int, rules_dimacs_file_path: str):
 
 def get_settings(program_version: int):
 
-    if (program_version > 4):
-        raise Exception("Program version should be between 1-4")
+    if (program_version > 3 or program_version < 1):
+        raise Exception("Program version should be between 1-3")
 
     if program_version == 3:
-        return {}
+        return {"DependencyGraph" : False, "Lookahead" : True}
+    elif (program_version == 1):
+        return {"DependencyGraph" : False, "Lookahead" : False}
+    elif (program_version == 2):
+        return {"DependencyGraph" : True, "Lookahead" : False}
 
-    settings = {key: False for key in ["DependencyGraph", "Heuristiek2"]}
-    if (program_version == 1):
-        pass
-    elif (program_version > 1):
-        settings["DependencyGraph"] = True
-        if (program_version > 2):
-            settings["Heuristiek2"] = True
-
-    return settings
 
 
 def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
     profile = False
-    multiprocessing = True
+    multiprocessing = False
 
 
-    problems = range(0,1000)
+    problems = range(0,999)
 
     if profile:
         pr = cProfile.Profile()
@@ -77,7 +73,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
 
         solve_fn = partial(solve_sudoku, problem_path=problem_path, program_version=program_version, rules_dimacs_file_path=rules_dimacs_file_path, settings=settings)
         if multiprocessing:
-            p = Pool(6)
+            p = Pool(12)
             sudokus_stats = list(p.map(solve_fn, problems))
             sudokus_stats = list(filter(lambda x: x[0] is not None, sudokus_stats))
         else:
@@ -100,8 +96,10 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
     print(f"problem: {problem_id}")
     start = True
     split_statistics = []
+    runtime = None
     while (start):
         start = False
+
 
         try:
             print(f"\nStarting solving problem {problem_id}, program_version: {program_version}")
@@ -115,10 +113,10 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
             knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
             print("Problem loaded")
 
-            if program_version == 3:
+            if settings["Lookahead"]:
                 solver = LookAHeadSolver(knowledge_base)
             else:
-                solver = Solver(knowledge_base, split_stats=split_statistics, heuristics=settings, problem_id=problem_id)
+                solver = Solver(knowledge_base, split_stats=split_statistics, heuristics=settings, problem_id=problem_id, start=runtime)
 
             try:
                 solution, solved, split_statistics = solver.solve_instance()
@@ -140,6 +138,7 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
             if (start):
                 print(f"Restarted {problem_id}")
                 split_statistics = e.stats
+                runtime = e.runtime
 
 
 if __name__ == "__main__":

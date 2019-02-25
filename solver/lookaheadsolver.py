@@ -16,12 +16,16 @@ class LookAHeadSolver:
         self.nr_of_splits = 0
         self.total_literals = knowledge_base.literal_counter
         self.failed_literals = 0
+        self.start = 0
+
+    def get_elapsed_runtime(self):
+        return timeit.default_timer() - self.start
 
     def solve_instance(self) -> Tuple[KnowledgeBase, bool, List]:
         """ main function for solving knowledge base """
         self.nr_of_splits = -1
         self.split_statistics = []
-        start = timeit.default_timer()
+        self.start = timeit.default_timer()
 
         # Check tautology (part of simplify, but only done once)
         self.initial.simplify_tautology()
@@ -39,7 +43,7 @@ class LookAHeadSolver:
                 self.nr_of_splits += 1
                 # inform user of progress
 
-                runtime = timeit.default_timer() - start
+                runtime = timeit.default_timer() - self.start
                 if runtime > 30:
                     # raise RunningTimeException(f"!!! SKIPPING SUDOKU. Time is out, runtime:{runtime} !!!")
                     pass
@@ -57,7 +61,7 @@ class LookAHeadSolver:
                 # found solution
                 print("\nSolved")
                 return current_state, True, self.split_statistics
-            self.split_statistics.append(current_state.split_statistics())
+            self.split_statistics.append(current_state.split_statistics(self.get_elapsed_runtime()))
 
             # simplify
             valid = current_state.simplify([], False)
@@ -117,7 +121,7 @@ class LookAHeadSolver:
             valid1 = fprime.set_literal(literal, False)[0]
             if valid1:
                 valid1 = fprime.simplify([], False)[0]
-            self.split_statistics.append(fprime.split_statistics())
+            self.split_statistics.append(fprime.split_statistics(self.get_elapsed_runtime()))
 
             if valid1 and fprime.nr_of_binary_clauses() - 65 > f.nr_of_binary_clauses():
                 fprime, valid1 = self.double_look(fprime)
@@ -126,7 +130,7 @@ class LookAHeadSolver:
             valid2 = fdprime.set_literal(literal, True)[0]
             if valid2:
                 valid2 = fdprime.simplify([], False)[0]
-            self.split_statistics.append(fdprime.split_statistics())
+            self.split_statistics.append(fdprime.split_statistics(self.get_elapsed_runtime()))
 
             if valid2 and fdprime.nr_of_binary_clauses() - 65 > f.nr_of_binary_clauses():
                 fdprime, valid2 = self.double_look(fdprime)
@@ -172,13 +176,13 @@ class LookAHeadSolver:
             valid1 = fprime.set_literal(literal, False)[0]
             if valid1:
                 valid1 = fprime.simplify([], False)[0]
-            self.split_statistics.append(fprime.split_statistics())
+            self.split_statistics.append(fprime.split_statistics(self.get_elapsed_runtime()))
 
             fdprime = self.saver.duplicate_knowledge_base(f, -1, False)
             valid2 = fdprime.set_literal(literal, True)[0]
             if valid2:
                 valid2 = fdprime.simplify([], False)[0]
-            self.split_statistics.append(fdprime.split_statistics())
+            self.split_statistics.append(fdprime.split_statistics(self.get_elapsed_runtime()))
 
             if not valid1 and not valid2:
                 return fprime, False

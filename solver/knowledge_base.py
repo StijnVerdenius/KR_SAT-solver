@@ -3,8 +3,9 @@ from typing import List, Dict, Set, Tuple
 
 from solver.clause import Clause
 from solver.dependency_graph import DependencyGraph
+from solver.split import Split
 
-Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
+# Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
 
 class KnowledgeBase:
     """
@@ -226,8 +227,8 @@ class KnowledgeBase:
     def __repr__(self):
         return self.__str__()
 
-    def split_statistics(self):
-        return Split(len(self.bookkeeping.keys()), len(self.clauses))
+    def split_statistics(self, runtime) -> Split:
+        return Split(len(self.bookkeeping.keys()), len(self.clauses), runtime)
 
     def add_clauses(self, clauses: Set[Clause]):
         """
