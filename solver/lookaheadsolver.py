@@ -9,10 +9,6 @@ from solver.knowledge_base import KnowledgeBase
 import timeit
 
 
-class RunningTimeException(Exception):
-    pass
-
-
 class LookAHeadSolver:
     def __init__(self, knowledge_base: KnowledgeBase):
         self.initial = knowledge_base

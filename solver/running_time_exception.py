@@ -1,0 +1,4 @@
+
+class RunningTimeException(Exception):
+    pass
+

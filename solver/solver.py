@@ -24,7 +24,9 @@ import timeit
 
 class Solver:
 
-    def __init__(self, knowledge_base: KnowledgeBase, split_stats=None, heuristics=None):
+    def __init__(self, knowledge_base: KnowledgeBase, split_stats=None, heuristics=None, problem_id=None):
+
+        self.problem_id = problem_id
 
         if (heuristics == None):
             raise Exception("No heuristics specified")
