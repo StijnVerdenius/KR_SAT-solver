@@ -140,8 +140,16 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
                 split_statistics = e.stats
                 runtime = e.runtime
 
+def enforce_python_version():
+    inf = sys.version_info
+    if (inf[0] < 3 or inf[1] < 5):
+        raise Exception("\n\n####################\nMake sure correct version of python is installed (3.5 or higher)\n####################\n\n")
+
 
 if __name__ == "__main__":
+
+    enforce_python_version()
+
     # Default vars:
     program_version = 1
     input_file = os.getcwd() + "/data/sudoku-rules.txt"
@@ -156,3 +164,4 @@ if __name__ == "__main__":
 
     # main(program_version, input_file)
     develop(3, input_file, os.getcwd() + "/data/sudokus/1000sudokus.txt")
+
