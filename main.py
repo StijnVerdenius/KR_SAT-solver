@@ -22,31 +22,45 @@ MAX_VERSION = 3
 MIN_VERSION = 1
 MIN_PYTHON = 3
 MIN_PYTHON_SUB = 5
+DEPGRAPH = "DependencyGraph"
+LOOKAHEAD = "Lookahead"
 
 
 def main(program_version: int, rules_dimacs_file_path: str):
-    """ main function for solving dimacs """
+    """
+    Main function for solving dimacs
 
+    :param program_version:
+    :param rules_dimacs_file_path:
+    :return:
+    """
+
+    # get settings
     settings = get_settings(program_version)
 
-    # sudoku_rules_clauses, last_id = read_rules(os.getcwd() + "/../data/sudoku-rules.txt", id=0)
+    # load clauses
     all_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
 
+    # create knowledge base
     knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
 
+    # init solver
     solver = Solver(knowledge_base)
 
+    # retrieve solution
     solution, solved, stats = solver.solve_instance()
 
+    # get dimacs
     dimacs = to_dimacs_str(solution)
 
+    # save to file
     file = open(rules_dimacs_file_path+".out", "w")
-
     file.write(dimacs+"\n")
-
     file.close()
 
-    print("Solved and written to file sucessfully")
+    # notify user
+    print("\n\n\nFINISHED: Solved and written to file successfully")
+    sys.exit(0)
 
 
 def get_settings(program_version: int):
@@ -61,18 +75,15 @@ def get_settings(program_version: int):
         raise Exception("Program version should be between 1-3")
 
     if program_version == 3:
-        return {"DependencyGraph" : False, "Lookahead" : True}
+        return {DEPGRAPH : False, LOOKAHEAD : True}
     elif (program_version == 1):
-        return {"DependencyGraph" : False, "Lookahead" : False}
+        return {DEPGRAPH : False, LOOKAHEAD : False}
     elif (program_version == 2):
-        return {"DependencyGraph" : True, "Lookahead" : False}
+        return {DEPGRAPH : True,  LOOKAHEAD: False}
 
-
-
-def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str):
+def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str): # TODO: remove
     profile = False
     multiprocessing = False
-
 
     problems = range(0,999)
 
@@ -105,7 +116,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
         print(s.getvalue())
 
 
-def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_path, settings):
+def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_path, settings): # TODO: remove
     print(f"problem: {problem_id}")
     start = True
     split_statistics = []
@@ -192,7 +203,7 @@ if __name__ == "__main__":
 
     program_version, input_file = parse_arguments(sys.argv)
 
-    # Default vars:
+    # DEFAULT vars:
     program_version = 1 # TODO: REMOVE DEFAULT
     # input_file = os.getcwd() + "/data/sudokus/uf20-01.cnf"
     input_file = os.getcwd() + "/data/sudoku-rules.txt"
@@ -200,3 +211,5 @@ if __name__ == "__main__":
     # main(program_version, input_file)
     develop(program_version, input_file, os.getcwd() + "/data/sudokus/1000sudokus.txt")
 
+    # exit
+    sys.exit(0)
