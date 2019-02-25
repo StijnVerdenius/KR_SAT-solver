@@ -3,7 +3,7 @@ from solver.knowledge_base import KnowledgeBase
 try:
     import numpy as np
 except ImportError:
-    raise RuntimeError("Please install numpy")
+    raise RuntimeError("Please install numpy package")
 
 
 

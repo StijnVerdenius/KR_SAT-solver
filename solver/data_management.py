@@ -1,11 +1,11 @@
 try:
     import pickle as pickle
 except ImportError:
-    raise RuntimeError("Please install _pickle")
+    raise RuntimeError("Please install _pickle & pickle package")
 
 from solver.knowledge_base import KnowledgeBase
 from solver.dependency_graph import DependencyGraph
-from collections import deque, defaultdict
+from collections import defaultdict
 
 
 class DataManager():
@@ -66,7 +66,6 @@ class DataManager():
                              dependency_graph=dependency_graph_,
                              timestep=step)
 
-        # todo: copy only the heuristics you use
 
 
     def duplicate_list(self, lst: list) -> list:
@@ -117,4 +116,3 @@ class DataManager():
     #                          dependency_graph=dependency_graph_,
     #                          timestep=step)    ##### todo; don't throw away!!!
     #
-    #     # todo: copy only the heuristics you use

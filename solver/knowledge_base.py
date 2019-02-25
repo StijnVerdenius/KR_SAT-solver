@@ -1,11 +1,9 @@
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from typing import List, Dict, Set, Tuple
 
 from solver.clause import Clause
 from solver.dependency_graph import DependencyGraph
 from solver.split import Split
-
-# Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
 
 class KnowledgeBase:
     """

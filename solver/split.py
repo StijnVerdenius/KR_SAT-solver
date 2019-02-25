@@ -2,6 +2,9 @@
 
 
 class Split:
+    """
+    Class that holds some stastics on splits
+    """
 
     def __init__(self, literal_cnt, clause_cnt, time_elapsed):
         self.literal_cnt = literal_cnt

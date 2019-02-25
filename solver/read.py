@@ -8,6 +8,14 @@ except ImportError:
 import math
 
 def read_rules_string(rules_str: str, id: int) -> Tuple[Dict[int, Clause], int]:
+    """
+    Read rules from dimacs string into datastructure
+
+    :param rules_str:
+    :param id:
+    :return:
+    """
+
     # TODO: error on file nt found
     clauses = {}
     for line in rules_str.split("\t"):
@@ -23,6 +31,15 @@ def read_rules_string(rules_str: str, id: int) -> Tuple[Dict[int, Clause], int]:
     return clauses, id
 
 def read_rules_dimacs(rules_path: str, id: int) -> Tuple[Dict[int, Clause], int]:
+    """
+    reads dimacs rules from file into string, then transfers to datastructure with read_rules_string function
+
+    :param rules_path:
+    :param id:
+    :return:
+    """
+
+
     # TODO: error on file nt found
     with open(rules_path) as f:
 
@@ -34,6 +51,14 @@ def read_rules_dimacs(rules_path: str, id: int) -> Tuple[Dict[int, Clause], int]
     return read_rules_string(stringbuilder.replace("\n{}", ""), id)
 
 def read_text_sudoku(puzzle_path: str, puzzle_number: int, id: int) -> Tuple[Dict[int, Clause], bool, int]:
+    """
+    Reads one-liner sudoku into dimacs string, returns data structure through read_rules_string function
+
+    :param puzzle_path:
+    :param puzzle_number:
+    :param id:
+    :return:
+    """
 
     with open(puzzle_path) as f:
         for i, line in enumerate(f):
@@ -79,19 +104,19 @@ def read_text_sudoku(puzzle_path: str, puzzle_number: int, id: int) -> Tuple[Dic
 
 
 
-if __name__ == "__main__":
-    rules_path = os.getcwd() + "/../data/sudoku-rules.txt"
-    sudoku_path = os.getcwd() + "/../data/sudoku-example.txt"
-
-    clauses = read_rules_dimacs(rules_path)
-    print("Rules:", list(clauses))
-
-    clauses = list(read_rules_dimacs(sudoku_path))
-    expected = [{168}, {175}, {225}, {231}, {318}, {419}, {444}, {465}, {493}, {689}, {692}, {727}, {732}, {828}, {886}, {956}, {961}, {973}]
-
-    assert str(clauses) == str(expected)
-
-    print(read_text_sudoku(os.getcwd() + "/../data/sudokus/1000sudokus.txt", 1)[1])
+# if __name__ == "__main__":
+#     rules_path = os.getcwd() + "/../data/sudoku-rules.txt"
+#     sudoku_path = os.getcwd() + "/../data/sudoku-example.txt"
+#
+#     clauses = read_rules_dimacs(rules_path)
+#     print("Rules:", list(clauses))
+#
+#     clauses = list(read_rules_dimacs(sudoku_path))
+#     expected = [{168}, {175}, {225}, {231}, {318}, {419}, {444}, {465}, {493}, {689}, {692}, {727}, {732}, {828}, {886}, {956}, {961}, {973}]
+#
+#     assert str(clauses) == str(expected)
+#
+#     print(read_text_sudoku(os.getcwd() + "/../data/sudokus/1000sudokus.txt", 1)[1])
 
 
 

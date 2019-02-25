@@ -10,7 +10,7 @@ try:
     import matplotlib.pyplot as plt
     import pandas as pd
 except ImportError as e:
-    raise RuntimeError("Please install numpy && Seaborn && matplotlib")
+    raise RuntimeError("Please install Numpy, Seaborn & Matplotlib packages")
 
 Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
 

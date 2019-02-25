@@ -1,7 +1,5 @@
 import itertools
-import operator
 from collections import defaultdict
-import random
 from typing import Tuple, List, Generator
 
 from solver.data_management import DataManager

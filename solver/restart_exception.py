@@ -2,6 +2,10 @@
 
 class RestartException(Exception):
 
+    """
+    Exception that is used to trigger a restart
+    """
+
     def __init__(self, message, stats = None, restart = True, elapsed_runtime = 0 ):
         super(RestartException, self).__init__(message)
         print(message)

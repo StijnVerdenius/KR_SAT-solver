@@ -1,12 +1,16 @@
 
 from collections import defaultdict
 from solver.clause import Clause
-from typing import List, Dict, Set, Tuple
+from typing import Dict, Set
 
 
 
 
 class DependencyGraph:
+
+    """
+    Holds the dependency graph functionality
+    """
 
     initial_coocurrence: Dict[int, Set[int]]
     graph: Dict[int, Set[int]]
@@ -35,6 +39,13 @@ class DependencyGraph:
             self.existing_literals = existing_literals
 
     def add_literal(self, literal, split=False):
+        """
+        Adds literal into dependency graph
+
+        :param literal:
+        :param split:
+        :return:
+        """
 
         if (not split):
             # cooccuring = self.initial_coocurrence[literal]
@@ -47,5 +58,12 @@ class DependencyGraph:
         self.existing_literals.append(literal)
 
     def find_conflict_clause(self, literal, id):
+        """
+        Finds the conflict clause given the literal that generated the conflict
+
+        :param literal:
+        :param id:
+        :return:
+        """
 
         return Clause(id, self.graph[literal])
