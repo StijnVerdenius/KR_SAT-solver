@@ -2,7 +2,7 @@ from typing import Tuple, List, Dict
 from solver.knowledge_base import KnowledgeBase
 from solver.clause import Clause
 from collections import defaultdict
-from solver.restart_exception import RestartException
+from solver.exception_implementations import RestartException
 from solver.solver import Solver
 import random
 try:

@@ -4,15 +4,14 @@ import cProfile, pstats, io
 from functools import partial
 from multiprocessing import Pool
 
-from solver.dimacs_write import to_dimacs_str
 from solver.solver_lookahead import LookAHeadSolver
-from solver.read import read_rules_dimacs as read_rules
-from solver.read import read_text_sudoku as read_problem
-from solver.running_time_exception import RunningTimeException
+
+from solver.exception_implementations import RunningTimeException
 from solver.solver_cdcl_dpll import *
 from solver.stats import print_stats, show_stats
 from solver.visualizer import print_sudoku
-from solver.restart_exception import RestartException
+from solver.exception_implementations import RestartException
+from solver.data_management import DataManager
 
 
 #### Constants
@@ -25,6 +24,8 @@ MIN_PYTHON_SUB = 5
 DEPGRAPH = "DependencyGraph"
 LOOKAHEAD = "Lookahead"
 RETRYLIMIT = 5
+
+data_manager = DataManager(os.getcwd() + '/results/')
 
 
 def main(program_version: int, rules_dimacs_file_path: str):
@@ -42,7 +43,7 @@ def main(program_version: int, rules_dimacs_file_path: str):
             settings = get_settings(program_version)
 
             # load clauses
-            all_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
+            all_clauses, last_id = data_manager.read_rules_dimacs(rules_dimacs_file_path, id=0)
 
             # init solver
             solver = get_solver(all_clauses, last_id, settings)
@@ -51,7 +52,7 @@ def main(program_version: int, rules_dimacs_file_path: str):
             solution, solved, stats = solver.solve_instance()
 
             # get dimacs
-            dimacs = to_dimacs_str(solution)
+            dimacs =data_manager.to_dimacs_str(solution)
 
             # save to file
             file = open(rules_dimacs_file_path+".out", "w")
@@ -104,13 +105,13 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
     profile = False
     multiprocessing = False
 
-    problems = range(0,10)
+    problems = range(0,999)
 
     if profile:
         pr = cProfile.Profile()
         pr.enable()
 
-    for program_version in [1,2,3]:
+    for program_version in [2]:
         settings = get_settings(program_version)
         print("SETTINGS:", settings)
 
@@ -123,8 +124,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
             sudokus_stats = map(solve_fn, problems)
             sudokus_stats = list(filter(lambda x: x[0] is not None, sudokus_stats))
 
-        # dm = DataManager(os.getcwd() + '/results/')
-        # dm.save_python_obj(sudokus_stats, f"experiment-v{program_version}")
+        data_manager.save_python_obj(sudokus_stats, f"experiment-v{program_version}")
 
     if profile:
         pr.disable()
@@ -149,8 +149,8 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
         try:
             print(f"\nStarting solving problem {problem_id}, program_version: {program_version}")
             print("Loading problem...")
-            rules_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
-            rules_puzzle, is_there_another_puzzle, last_id = read_problem(problem_path, problem_id, last_id)
+            rules_clauses, last_id = data_manager.read_rules_dimacs(rules_dimacs_file_path, id=0)
+            rules_puzzle, is_there_another_puzzle, last_id = data_manager.read_text_sudoku(problem_path, problem_id, last_id)
 
             all_clauses = {**rules_clauses, **rules_puzzle}
 

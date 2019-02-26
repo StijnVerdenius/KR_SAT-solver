@@ -1,4 +1,4 @@
-from typing import Set, Dict, Tuple
+from typing import Set
 
 
 class Clause(object):

@@ -22,7 +22,7 @@ class Solver:
         self.initial = knowledge_base
 
         # helper for data management
-        self.data_manager = DataManager("./temp/")
+        self.data_manager = DataManager("/temp/")
 
         # problem id
         self.problem_id = problem_id

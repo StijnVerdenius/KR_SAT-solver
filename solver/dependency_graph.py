@@ -48,10 +48,6 @@ class DependencyGraph:
         """
 
         if (not split):
-            # cooccuring = self.initial_coocurrence[literal]
-            # for cooc_literal in cooccuring:
-            #     if (abs(cooc_literal) in self.existing_literals):
-            #         self.graph[literal].add(cooc_literal)  # todo: dont delete this just in case <<<<
 
             self.graph[literal].update([lit for lit in self.initial_coocurrence[literal] if abs(lit) in self.existing_literals])
 
