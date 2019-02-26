@@ -55,7 +55,7 @@ class KnowledgeBase:
         # counts amount of clauses
         self.clause_counter = clause_counter
 
-        if dependency_graph is None:
+        if dependency_graph is None or dependency_graph is True:
             self.dependency_graph = DependencyGraph(bookkeeping=self.bookkeeping, clauses = self.clauses)
         elif dependency_graph is False:
             pass

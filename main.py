@@ -24,6 +24,7 @@ MIN_PYTHON = 3
 MIN_PYTHON_SUB = 5
 DEPGRAPH = "DependencyGraph"
 LOOKAHEAD = "Lookahead"
+RETRYLIMIT = 5
 
 
 def main(program_version: int, rules_dimacs_file_path: str):
@@ -34,34 +35,52 @@ def main(program_version: int, rules_dimacs_file_path: str):
     :param rules_dimacs_file_path:
     :return:
     """
+    for try_count in range(RETRYLIMIT):
+        try:
 
-    # get settings
-    settings = get_settings(program_version)
+            # get settings
+            settings = get_settings(program_version)
 
-    # load clauses
-    all_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
+            # load clauses
+            all_clauses, last_id = read_rules(rules_dimacs_file_path, id=0)
 
-    # create knowledge base
-    knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
+            # init solver
+            solver = get_solver(all_clauses, last_id, settings)
+
+            # retrieve solution
+            solution, solved, stats = solver.solve_instance()
+
+            # get dimacs
+            dimacs = to_dimacs_str(solution)
+
+            # save to file
+            file = open(rules_dimacs_file_path+".out", "w")
+            file.write(dimacs+"\n")
+            file.close()
+
+            # notify user
+            print("\n\n\nFINISHED: Solved and written to file successfully")
+            sys.exit(0)
+
+        except RestartException:
+            print(f"Restarted")
+
+    raise Exception(f"Tried {RETRYLIMIT} times, could not get a valid answer")
+
+
+def get_solver(clauses : Dict[int, Clause], last_id : int, settings: Dict[str, bool]):
+    """ Retrieves solver fit to version """
+
+    # build knowledge base
+    kb = KnowledgeBase(clauses, clause_counter=last_id, dependency_graph=settings[DEPGRAPH])
 
     # init solver
-    solver = CDCL_DPLL_Solver(knowledge_base)
+    if (settings[LOOKAHEAD]):
+        solver = LookAHeadSolver(kb)
+    else:
+        solver = CDCL_DPLL_Solver(kb,  heuristics=settings)
 
-    # retrieve solution
-    solution, solved, stats = solver.solve_instance()
-
-    # get dimacs
-    dimacs = to_dimacs_str(solution)
-
-    # save to file
-    file = open(rules_dimacs_file_path+".out", "w")
-    file.write(dimacs+"\n")
-    file.close()
-
-    # notify user
-    print("\n\n\nFINISHED: Solved and written to file successfully")
-    sys.exit(0)
-
+    return solver
 
 def get_settings(program_version: int):
     """
@@ -85,7 +104,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
     profile = False
     multiprocessing = False
 
-    problems = range(0,10)
+    problems = range(0,100)
 
     if profile:
         pr = cProfile.Profile()
@@ -121,6 +140,8 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
     start = True
     split_statistics = []
     runtime = None
+
+    stoptime = 0
     while (start):
         start = False
 
@@ -140,12 +161,16 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
             if settings["Lookahead"]:
                 solver = LookAHeadSolver(knowledge_base)
             else:
+
                 solver = CDCL_DPLL_Solver(knowledge_base, split_stats=split_statistics, heuristics=settings, problem_id=problem_id, start=runtime)
 
             try:
+                if (not runtime is None):
+                    stoptime_ = solver.get_elapsed_runtime() - stoptime
+                    solver.start += stoptime_
                 solution, solved, split_statistics = solver.solve_instance()
 
-                # print_sudoku(solution)
+                print_sudoku(solution)
             except RunningTimeException as e:
                 print(f"!!! SKIPPED SUDOKU {problem_id} !!!")
                 print(e)
@@ -156,6 +181,8 @@ def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_pa
             return (split_statistics, problem_id, program_version)
 
         except RestartException as e:
+
+            stoptime = solver.get_elapsed_runtime()
 
             start = e.restart
 
