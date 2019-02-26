@@ -9,7 +9,7 @@ def add_version_number(item, vn):
     return (*item, vn)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # TODO: remove
     dm = DataManager(os.getcwd() + '/results/')
     sudokus_stats = dm.load_python_obj('experiment-v3')
 

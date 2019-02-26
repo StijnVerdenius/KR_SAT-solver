@@ -14,7 +14,7 @@ except ImportError as e:
 
 Split = namedtuple('Split', ['literal_cnt', 'clause_cnt'])
 
-def show_stats(sudokus_stats):
+def show_stats(sudokus_stats):  # TODO: merge with visualizer
     literal_cnts = []
     clause_cnts = []
     sudoku_nrs = []
