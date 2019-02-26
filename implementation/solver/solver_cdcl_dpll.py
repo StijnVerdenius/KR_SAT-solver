@@ -1,9 +1,9 @@
 from typing import Tuple, List, Dict
-from solver.knowledge_base import KnowledgeBase
-from solver.clause import Clause
+from implementation.solver.knowledge_base import KnowledgeBase
+from implementation.model.clause import Clause
 from collections import defaultdict
-from solver.exception_implementations import RestartException
-from solver.solver import Solver
+from implementation.model.exception_implementations import RestartException
+from implementation.solver.solver import Solver
 import random
 try:
     import numpy as np

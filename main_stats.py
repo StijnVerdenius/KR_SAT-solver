@@ -1,8 +1,8 @@
 import os
 from functools import partial
 
-from solver.data_management import DataManager
-from solver.stats import show_stats
+from implementation.util.data_management import DataManager
+from implementation.util.stats import show_stats
 
 
 def add_version_number(item, vn):

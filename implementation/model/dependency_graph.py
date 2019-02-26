@@ -1,6 +1,6 @@
 
 from collections import defaultdict
-from solver.clause import Clause
+from implementation.model.clause import Clause
 from typing import Dict, Set
 
 

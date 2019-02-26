@@ -1,4 +1,4 @@
-from solver.knowledge_base import KnowledgeBase
+from implementation.solver.knowledge_base import KnowledgeBase
 
 try:
     import numpy as np

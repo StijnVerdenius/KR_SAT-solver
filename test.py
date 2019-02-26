@@ -1,6 +1,6 @@
-from solver.clause import Clause
-from solver.knowledge_base import KnowledgeBase
-from solver.solver_cdcl_dpll import CDCL_DPLL_Solver
+from implementation.model.clause import Clause
+from implementation.solver.knowledge_base import KnowledgeBase
+from implementation.solver.solver_cdcl_dpll import CDCL_DPLL_Solver
 from main import get_settings
 
 def test_solver_tautology():

@@ -1,9 +1,9 @@
 import itertools
 from collections import defaultdict
 from typing import Tuple, List, Generator
-from solver.knowledge_base import KnowledgeBase
+from implementation.solver.knowledge_base import KnowledgeBase
 import timeit
-from solver.solver import Solver
+from implementation.solver.solver import Solver
 
 
 class LookAHeadSolver(Solver):

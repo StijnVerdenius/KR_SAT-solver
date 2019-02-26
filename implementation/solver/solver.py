@@ -1,5 +1,5 @@
-from solver.data_management import DataManager
-from solver.knowledge_base import KnowledgeBase
+from implementation.util.data_management import DataManager
+from implementation.solver.knowledge_base import KnowledgeBase
 from typing import Tuple, List
 import random
 

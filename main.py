@@ -4,14 +4,13 @@ import cProfile, pstats, io
 from functools import partial
 from multiprocessing import Pool
 
-from solver.solver_lookahead import LookAHeadSolver
+from implementation.solver.solver_lookahead import LookAHeadSolver
 
-from solver.exception_implementations import RunningTimeException
-from solver.solver_cdcl_dpll import *
-from solver.stats import print_stats, show_stats
-from solver.visualizer import print_sudoku
-from solver.exception_implementations import RestartException
-from solver.data_management import DataManager
+from implementation.model.exception_implementations import RunningTimeException
+from implementation.solver.solver_cdcl_dpll import *
+from implementation.util.visualizer import print_sudoku
+from implementation.model.exception_implementations import RestartException
+from implementation.util.data_management import DataManager
 
 
 #### Constants
@@ -45,7 +44,7 @@ def main(program_version: int, rules_dimacs_file_path: str):
             # load clauses
             all_clauses, last_id = data_manager.read_rules_dimacs(rules_dimacs_file_path, id=0)
 
-            # init solver
+            # init implementation
             solver = get_solver(all_clauses, last_id, settings)
 
             # retrieve solution
@@ -70,12 +69,12 @@ def main(program_version: int, rules_dimacs_file_path: str):
 
 
 def get_solver(clauses : Dict[int, Clause], last_id : int, settings: Dict[str, bool]):
-    """ Retrieves solver fit to version """
+    """ Retrieves implementation fit to version """
 
     # build knowledge base
     kb = KnowledgeBase(clauses, clause_counter=last_id, dependency_graph=settings[DEPGRAPH])
 
-    # init solver
+    # init implementation
     if (settings[LOOKAHEAD]):
         solver = LookAHeadSolver(kb)
     else:
@@ -105,13 +104,13 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
     profile = False
     multiprocessing = False
 
-    problems = range(0,999)
+    problems = range(0,5)
 
     if profile:
         pr = cProfile.Profile()
         pr.enable()
 
-    for program_version in [2]:
+    for program_version in [1,2,3]:
         settings = get_settings(program_version)
         print("SETTINGS:", settings)
 
@@ -124,7 +123,7 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
             sudokus_stats = map(solve_fn, problems)
             sudokus_stats = list(filter(lambda x: x[0] is not None, sudokus_stats))
 
-        data_manager.save_python_obj(sudokus_stats, f"experiment-v{program_version}")
+        # data_manager.save_python_obj(sudokus_stats, f"experiment-v{program_version}")
 
     if profile:
         pr.disable()

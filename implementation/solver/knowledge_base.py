@@ -1,9 +1,9 @@
 from collections import defaultdict
 from typing import List, Dict, Set, Tuple
 
-from solver.clause import Clause
-from solver.dependency_graph import DependencyGraph
-from solver.split import Split
+from implementation.model.clause import Clause
+from implementation.model.dependency_graph import DependencyGraph
+from implementation.model.split import Split
 
 class KnowledgeBase:
     """

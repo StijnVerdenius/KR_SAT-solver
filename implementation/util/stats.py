@@ -2,7 +2,7 @@ import os
 from collections import namedtuple
 from typing import List
 
-from solver.data_management import DataManager
+from implementation.util.data_management import DataManager
 
 try:
     import numpy as np

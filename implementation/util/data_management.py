@@ -3,11 +3,11 @@ try:
 except ImportError:
     raise RuntimeError("Please install _pickle & pickle package")
 
-from solver.knowledge_base import KnowledgeBase
-from solver.dependency_graph import DependencyGraph
+from implementation.solver.knowledge_base import KnowledgeBase
+from implementation.model.dependency_graph import DependencyGraph
 from collections import defaultdict
 from typing import Dict, Tuple
-from solver.clause import Clause
+from implementation.model.clause import Clause
 try:
     import numpy as np
 except ImportError:
