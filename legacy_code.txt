@@ -40,3 +40,13 @@
             # for cooc_literal in cooccuring:
             #     if (abs(cooc_literal) in self.existing_literals):
             #         self.graph[literal].add(cooc_literal)  # todo: dont delete this just in case <<<<
+
+
+TODO list:
+
+- test solvers op andere dimacs
+- test output van solver
+- opschonen main.py
+- documentatie schrijven in dit bestand
+- move test.py and main_stats.py
+- verslag
