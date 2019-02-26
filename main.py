@@ -219,7 +219,7 @@ def parse_arguments(arguments):
 
     program_version = int(option[2])
 
-    input_file = arguments[2]
+    input_file = os.getcwd() + arguments[2]
 
     return program_version, input_file
 
