@@ -160,11 +160,12 @@ class KnowledgeBase:
         :param literal:
         :param truth_value:
         """
-        if literal in self.current_set_literals and self.current_set_literals[literal] == truth_value:
-            return True, 0
 
-        # First check if this is a allowed op.
         abs_literal = abs(literal)
+
+        if abs_literal in self.current_set_literals:
+            if (self.current_set_literals[abs_literal] == truth_value):
+                return True, 0
 
         if (dependency_graph):
             self.dependency_graph.add_literal(abs_literal, split=split)
@@ -188,11 +189,11 @@ class KnowledgeBase:
 
                 # Remove empty and satisfied clauses
                 if -abs_literal in clause.literals:
-                    clause.literals.remove(-abs_literal)
+                    clause.remove_literal(-abs_literal)
                 if abs_literal in clause.literals:
-                    clause.literals.remove(abs_literal)
+                    clause.remove_literal(abs_literal)
 
-        if abs_literal in self.bookkeeping:
+        if (abs_literal in self.bookkeeping):
             del self.bookkeeping[abs_literal]
 
         self.remove_clauses(clauses_to_remove)

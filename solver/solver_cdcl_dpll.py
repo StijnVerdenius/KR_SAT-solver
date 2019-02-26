@@ -1,5 +1,4 @@
 from typing import Tuple, List, Dict
-from solver.data_management import DataManager
 from solver.knowledge_base import KnowledgeBase
 from solver.clause import Clause
 from collections import defaultdict
@@ -103,7 +102,7 @@ class CDCL_DPLL_Solver(Solver):
             if solved:
                 # found solution
                 print("\nSolved")
-                return current_state, True, self.split_statistics
+                return self.wrap_up_result(current_state, True, self.split_statistics, list(self.initial.bookkeeping.keys()))
 
             # simplify
             set_literals = []
@@ -125,7 +124,7 @@ class CDCL_DPLL_Solver(Solver):
             if solved:
                 # found solution
                 print("\nSolved")
-                return current_state, True, self.split_statistics
+                return self.wrap_up_result(current_state, True, self.split_statistics, list(self.initial.bookkeeping.keys()))
             else:
                 # split
                 future_states, literal = self.split(current_state)

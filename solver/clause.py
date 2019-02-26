@@ -18,26 +18,6 @@ class Clause(object):
     def __len__(self):
         return len(self.literals)
 
-    def validate(self, assigned_literals: Dict[int, bool]) -> Tuple[bool, bool]:
-        """
-        Evaluates the clause against a assignment of literals
-        :param assigned_literals:
-        :return: boolean
-        """
-
-        for literal in self.literals:
-            literal = abs(literal)
-            if literal not in assigned_literals:
-                continue
-
-            assignment = assigned_literals[literal]
-            if literal < 0 and assignment is False:
-                return True, False
-
-            if literal > 0 and assignment is True:
-                return True, False
-
-        return False, False
 
     def remove_literal(self, literal):
         self.literals.remove(literal)

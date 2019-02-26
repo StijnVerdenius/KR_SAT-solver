@@ -1,8 +1,6 @@
 import itertools
 from collections import defaultdict
 from typing import Tuple, List, Generator
-
-from solver.data_management import DataManager
 from solver.knowledge_base import KnowledgeBase
 import timeit
 from solver.solver import Solver
@@ -26,7 +24,7 @@ class LookAHeadSolver(Solver):
         # Check tautology (part of simplify, but only done once)
         self.initial.simplify_tautology()
 
-        stack = iter([self.initial])
+        stack = iter([self.data_manager.personal_deepcopy(self.initial)])
         solved = False
         count = 0
 
@@ -51,7 +49,7 @@ class LookAHeadSolver(Solver):
             if solved:
                 # found solution
                 print("\nSolved")
-                return current_state, True, self.split_statistics
+                return self.wrap_up_result(self.data_manager.duplicate_knowledge_base(current_state, -1, False), True, self.split_statistics, self.data_manager.personal_deepcopy(list(self.initial.bookkeeping.keys())))
 
             # simplify
             valid = current_state.simplify([], False)
@@ -64,7 +62,7 @@ class LookAHeadSolver(Solver):
             if solved:
                 # found solution
                 print("\nSolved")
-                return current_state, True, self.split_statistics
+                return self.wrap_up_result(self.data_manager.duplicate_knowledge_base(current_state, -1, False), True, self.split_statistics, self.data_manager.personal_deepcopy(list(self.initial.bookkeeping.keys())))
             else:
                 # split
                 future_states = self.split(current_state)

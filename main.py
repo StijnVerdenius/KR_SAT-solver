@@ -104,13 +104,13 @@ def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str
     profile = False
     multiprocessing = False
 
-    problems = range(0,100)
+    problems = range(0,10)
 
     if profile:
         pr = cProfile.Profile()
         pr.enable()
 
-    for program_version in [2, 3]:
+    for program_version in [1,2,3]:
         settings = get_settings(program_version)
         print("SETTINGS:", settings)
 

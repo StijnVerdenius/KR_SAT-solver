@@ -1,6 +1,7 @@
-from typing import Tuple, List, Generator
 from solver.data_management import DataManager
 from solver.knowledge_base import KnowledgeBase
+from typing import Tuple, List
+import random
 
 try:
     import numpy as np
@@ -47,3 +48,24 @@ class Solver:
                   f"{len(state.clauses)}", end='')
 
         return count
+
+    def wrap_up_result(self, base: KnowledgeBase, solved: bool, stats: List , all_literals: List[int]) -> Tuple[KnowledgeBase, bool, List]:
+        """
+        Makes sure that literals that are not set yet because their value is irrelevant are set at random.
+
+        :param base:
+        :param solved:
+        :param stats:
+        :param all_literals:
+        :return:
+        """
+
+        for literal in all_literals:
+            if (not literal in base.current_set_literals):
+                try:
+                    rand_assign = random.choice([True, False])
+                    base.set_literal(literal, rand_assign)
+                except Exception:
+                    pass # ignore
+
+        return base, solved, stats
