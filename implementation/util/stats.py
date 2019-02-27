@@ -50,7 +50,7 @@ def show_stats(sudokus_stats):  # TODO: merge with visualizer
             algorithms.append(algorithm_names[program_version])
 
             x += 1
-            # y[i, j] = split.literal_cnt
+            # _2[i, j] = split.literal_cnt
 
     d = {'Literals': literal_cnts, 'Ratio clauses to variables': ratios, 'Clauses':clause_cnts, 'Sudoku': sudoku_nrs, 'Splits': xs, 'Algorithm': algorithms, 'Runtime': runtimes}
     df = pd.DataFrame(data=d)
@@ -58,67 +58,67 @@ def show_stats(sudokus_stats):  # TODO: merge with visualizer
     df_split_len = pd.DataFrame(data={'Splits': nr_of_splits, 'Sudoku': sudokus, 'Runtime': runtimes_len, 'Algorithm': versions})
 
     # print(df)
-    # sns.lineplot(x="Splits", y='Literals', data=df)
+    # sns.lineplot(_1="Splits", _2='Literals', data=df)
     # plt.xlabel("Splits")
     # plt.ylabel("Clauses")
     # plt.show()
 
-    # sns.lineplot(x="Splits", y='Literals', data=df, hue="Sudoku")
+    # sns.lineplot(_1="Splits", _2='Literals', data=df, hue="Sudoku")
     # plt.xlabel("Splits")
     # plt.ylabel("Clauses")
     # plt.show()
 
-    # sns.lineplot(x="Splits", y='Clauses', data=df, hue="Sudoku")
+    # sns.lineplot(_1="Splits", _2='Clauses', data=df, hue="Sudoku")
     # plt.xlabel("Splits")
     # plt.ylabel("Clauses")
     # plt.show()
 
-    # sns.lineplot(x="Splits", y='Literals', data=df, hue='Algorithm')
+    # sns.lineplot(_1="Splits", _2='Literals', data=df, hue='Algorithm')
     # plt.xlabel("Splits")
     # plt.ylabel("Literals")
     # plt.show()
     #
-    # sns.lineplot(x="Splits", y='Clauses', data=df, hue='Algorithm')
+    # sns.lineplot(_1="Splits", _2='Clauses', data=df, hue='Algorithm')
     # plt.xlabel("Splits")
     # plt.ylabel("Clauses")
     # plt.show()
 
-    # sns.lineplot(x="Splits", y='Ratio clauses to variables', data=df, hue='Algorithm')
+    # sns.lineplot(_1="Splits", _2='Ratio clauses to variables', data=df, hue='Algorithm')
     # plt.xlim([0, 500])
     # plt.show()
     #
-    # sns.lineplot(x="Runtime", y='Ratio clauses to variables', data=df, hue='Algorithm')
+    # sns.lineplot(_1="Runtime", _2='Ratio clauses to variables', data=df, hue='Algorithm')
     # plt.xlim([0, 50])
     # plt.show()
     #
-    # sns.lineplot(x="Runtime", y='Clauses', data=df, hue='Algorithm')
+    # sns.lineplot(_1="Runtime", _2='Clauses', data=df, hue='Algorithm')
     # plt.xlim([0, 50])
     # plt.show()
     #
-    # sns.lineplot(x="Runtime", y='Literals', data=df, hue='Algorithm')
+    # sns.lineplot(_1="Runtime", _2='Literals', data=df, hue='Algorithm')
     # plt.xlim([0, 50])
     # plt.show()
     #
-    # sns.stripplot(x="Sudoku", y="Splits", hue="Algorithm", data=df_split_len)
+    # sns.stripplot(_1="Sudoku", _2="Splits", hue="Algorithm", data=df_split_len)
     # plt.xlim([0, 500])
     # plt.show()
     #
-    # sns.stripplot(x="Algorithm", y="Splits", data=df_split_len)
+    # sns.stripplot(_1="Algorithm", _2="Splits", data=df_split_len)
     # plt.xlim([0, 500])
     # plt.show()
     #
-    # sns.violinplot(x="Algorithm", y="Splits", data=df_split_len)
+    # sns.violinplot(_1="Algorithm", _2="Splits", data=df_split_len)
     # plt.xlim([0, 500])
     # plt.show()
     #
-    # sns.scatterplot(x="Literals", y="Clauses", hue="Algorithm", data=df)
+    # sns.scatterplot(_1="Literals", _2="Clauses", hue="Algorithm", data=df)
     # plt.show()
     #
-    # sns.barplot(x="Sudoku", y='Splits', data=df_split_len, hue='Algorithm')
+    # sns.barplot(_1="Sudoku", _2='Splits', data=df_split_len, hue='Algorithm')
     # plt.ylim([0, 500])
     # plt.show()
     #
-    # sns.boxenplot(y="Splits", x="Algorithm",  data=df_split_len)
+    # sns.boxenplot(_2="Splits", _1="Algorithm",  data=df_split_len)
     # plt.ylim([0, 500])
     # plt.show()
 
@@ -162,16 +162,16 @@ def show_stats(sudokus_stats):  # TODO: merge with visualizer
 
     # for sudoku in sudokus:
     # sns.set(style="darkgrid")
-    # x = np.arange(0, len(splits_statistics))
-    # y = [split.clause_cnt for split in splits_statistics]
-    # sns.lineplot(x, y)
+    # _1 = np.arange(0, len(splits_statistics))
+    # _2 = [split.clause_cnt for split in splits_statistics]
+    # sns.lineplot(_1, _2)
     # plt.xlabel("Splits")
     # plt.ylabel("Clauses")
     # plt.show()
     #
-    # x = np.arange(0, len(splits_statistics))
-    # y = [split.literal_cnt for split in splits_statistics]
-    # sns.lineplot(x, y)
+    # _1 = np.arange(0, len(splits_statistics))
+    # _2 = [split.literal_cnt for split in splits_statistics]
+    # sns.lineplot(_1, _2)
     # plt.xlabel("Splits")
     # plt.ylabel("Literals")
     # plt.show()
