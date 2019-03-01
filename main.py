@@ -100,96 +100,6 @@ def get_settings(program_version: int):
     elif (program_version == 2):
         return {DEPGRAPH : True,  LOOKAHEAD: False}
 
-def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str): # TODO: remove
-    profile = False
-    multiprocessing = False
-
-    problems = range(0,5)
-
-    if profile:
-        pr = cProfile.Profile()
-        pr.enable()
-
-    for program_version in [1,2,3]:
-        settings = get_settings(program_version)
-        print("SETTINGS:", settings)
-
-        solve_fn = partial(solve_sudoku, problem_path=problem_path, program_version=program_version, rules_dimacs_file_path=rules_dimacs_file_path, settings=settings)
-        if multiprocessing:
-            p = Pool(12)
-            sudokus_stats = list(p.map(solve_fn, problems))
-            sudokus_stats = list(filter(lambda x: x[0] is not None, sudokus_stats))
-        else:
-            sudokus_stats = map(solve_fn, problems)
-            sudokus_stats = list(filter(lambda x: x[0] is not None, sudokus_stats))
-
-        # data_manager.save_python_obj(sudokus_stats, f"experiment-v{program_version}")
-
-    if profile:
-        pr.disable()
-        s = io.StringIO()
-        sortby = 'cumulative'
-        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        print(s.getvalue())
-
-
-def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_path, settings): # TODO: remove
-    print(f"problem: {problem_id}")
-    start = True
-    split_statistics = []
-    runtime = None
-
-    stoptime = 0
-    while (start):
-        start = False
-
-
-        try:
-            print(f"\nStarting solving problem {problem_id}, program_version: {program_version}")
-            print("Loading problem...")
-            rules_clauses, last_id = data_manager.read_rules_dimacs(rules_dimacs_file_path, id=0)
-            rules_puzzle, is_there_another_puzzle, last_id = data_manager.read_text_sudoku(problem_path, problem_id, last_id)
-
-            all_clauses = {**rules_clauses, **rules_puzzle}
-
-            # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
-            knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
-            print("Problem loaded")
-
-            if settings["Lookahead"]:
-                solver = LookAHeadSolver(knowledge_base)
-            else:
-
-                solver = CDCL_DPLL_Solver(knowledge_base, split_stats=split_statistics, heuristics=settings, problem_id=problem_id, start=runtime)
-
-            try:
-                if (not runtime is None):
-                    stoptime_ = solver.get_elapsed_runtime() - stoptime
-                    solver.start += stoptime_
-                solution, solved, split_statistics = solver.solve_instance()
-
-                print_sudoku(solution)
-            except RunningTimeException as e:
-                print(f"!!! SKIPPED SUDOKU {problem_id} !!!")
-                print(e)
-                return (None, None, None)
-
-            # print_stats(split_statistics)
-            #dimacs = to_dimacs_str(solution)
-            return (split_statistics, problem_id, program_version)
-
-        except RestartException as e:
-
-            stoptime = solver.get_elapsed_runtime()
-
-            start = e.restart
-
-            if (start):
-                print(f"Restarted {problem_id}")
-                split_statistics = e.stats
-                runtime = e.runtime
-
 def enforce_python_version():
     """
     Enforces correct python version for run
@@ -225,17 +135,14 @@ def parse_arguments(arguments):
 
 if __name__ == "__main__":
 
+    # check env
     enforce_python_version()
 
-    # program_version, input_file = parse_arguments(sys.argv) # TODO: uncomment
+    # get arguments
+    program_version, input_file = parse_arguments(sys.argv)
 
-    # DEFAULT vars:
-    program_version = 1 # TODO: REMOVE DEFAULT
-    # input_file = os.getcwd() + "/data/sudokus/uf20-01.cnf"
-    input_file = os.getcwd() + "/data/sudoku-rules.txt"
+    # run
+    main(program_version, input_file)
 
-    # main(program_version, input_file)
-    develop(program_version, input_file, os.getcwd() + "/data/sudokus/1000sudokus.txt")  # TODO: develop -> main
-
-    # exit
+    # exit successfully
     sys.exit(0)

@@ -115,9 +115,6 @@ class DataManager():
         file.append("p cnf 81 90")
         for literal in literals:
 
-            # if (not knowledge_base.current_set_literals[literal]):  # false literals should be printed too
-            #     continue
-
             file.append(f"{literal*int(knowledge_base.current_set_literals[literal]) + -literal*int(not knowledge_base.current_set_literals[literal])} 0\n")
 
         return "".join(file)

@@ -1,0 +1,151 @@
+
+
+OUDE DUPLICATE FUNCTION
+
+    # def duplicate_knowledge_base(self, base : KnowledgeBase, step : int):
+    #
+    #     clauses_ = self.personal_deepcopy(base.clauses)
+    #     set_literals_ = self.personal_deepcopy(base.current_set_literals)
+    #     bookkeeping_ = self.personal_deepcopy(base.bookkeeping)
+    #
+    #     # dependency graph stuff
+    #     initial_ = self.personal_deepcopy(base.dependency_graph.initial_coocurrence)
+    #     graph_ = self.personal_deepcopy(base.dependency_graph.graph)
+    #     dependency_graph_ = DependencyGraph(initial=initial_, graph=graph_, existing_literals=list(set_literals_.keys()))
+    #
+    #     return KnowledgeBase(clauses=clauses_,
+    #                          current_set_literals= set_literals_,
+    #                          bookkeeping=bookkeeping_,
+    #                          clause_counter= base.clause_counter,
+    #                          literal_counter= base.literal_counter,
+    #                          dependency_graph=dependency_graph_,
+    #                          timestep=step)    ##### todo; don't throw away!!!
+    #
+
+DEEL VAN LEES FUNCTIE
+
+# if __name__ == "__main__":
+#     rules_path = os.getcwd() + "/../data/sudoku-rules.txt"
+#     sudoku_path = os.getcwd() + "/../data/sudoku-example.txt"
+#
+#     clauses = read_rules_dimacs(rules_path)
+#     print("Rules:", list(clauses))
+#
+#     clauses = list(read_rules_dimacs(sudoku_path))
+#     expected = [{168}, {175}, {225}, {231}, {318}, {419}, {444}, {465}, {493}, {689}, {692}, {727}, {732}, {828}, {886}, {956}, {961}, {973}]
+#
+#     assert str(clauses) == str(expected)
+#
+#     print(read_text_sudoku(os.getcwd() + "/../data/sudokus/1000sudokus.txt", 1)[1])
+
+
+            # cooccuring = self.initial_coocurrence[literal]
+            # for cooc_literal in cooccuring:
+            #     if (abs(cooc_literal) in self.existing_literals):
+            #         self.graph[literal].add(cooc_literal)  # todo: dont delete this just in case <<<<
+
+
+MAIN.PY
+
+
+# DEFAULT vars:
+    program_version = 1 # TODO: REMOVE DEFAULT
+    # input_file = os.getcwd() + "/data/sudokus/uf20-01.cnf"
+    input_file = os.getcwd() + "/data/sudoku-rules.txt"
+        develop(program_version, input_file, os.getcwd() + "/data/sudokus/1000sudokus.txt")  # TODO: develop -> main
+
+
+def develop(program_version: int, rules_dimacs_file_path: str, problem_path: str): # TODO: remove
+    profile = False
+    multiprocessing = False
+
+    problems = range(0,5)
+
+    if profile:
+        pr = cProfile.Profile()
+        pr.enable()
+
+    for program_version in [1,2,3]:
+        settings = get_settings(program_version)
+        print("SETTINGS:", settings)
+
+        solve_fn = partial(solve_sudoku, problem_path=problem_path, program_version=program_version, rules_dimacs_file_path=rules_dimacs_file_path, settings=settings)
+        if multiprocessing:
+            p = Pool(12)
+            sudokus_stats = list(p.map(solve_fn, problems))
+            sudokus_stats = list(filter(lambda x: x[0] is not None, sudokus_stats))
+        else:
+            sudokus_stats = map(solve_fn, problems)
+            sudokus_stats = list(filter(lambda x: x[0] is not None, sudokus_stats))
+
+        # data_manager.save_python_obj(sudokus_stats, f"experiment-v{program_version}")
+
+    if profile:
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
+
+
+def solve_sudoku(problem_id, problem_path, program_version, rules_dimacs_file_path, settings): # TODO: remove
+    print(f"problem: {problem_id}")
+    start = True
+    split_statistics = []
+    runtime = None
+
+    stoptime = 0
+    while (start):
+        start = False
+
+
+        try:
+            print(f"\nStarting solving problem {problem_id}, program_version: {program_version}")
+            print("Loading problem...")
+            rules_clauses, last_id = data_manager.read_rules_dimacs(rules_dimacs_file_path, id=0)
+            rules_puzzle, is_there_another_puzzle, last_id = data_manager.read_text_sudoku(problem_path, problem_id, last_id)
+
+            all_clauses = {**rules_clauses, **rules_puzzle}
+
+            # all_clauses = list(sudoku_clauses) + list(sudoku_clauses)
+            knowledge_base = KnowledgeBase(all_clauses, clause_counter=last_id)
+            print("Problem loaded")
+
+            if settings["Lookahead"]:
+                solver = LookAHeadSolver(knowledge_base)
+            else:
+
+                solver = CDCL_DPLL_Solver(knowledge_base, split_stats=split_statistics, heuristics=settings, problem_id=problem_id, start=runtime)
+
+            try:
+                if (not runtime is None):
+                    stoptime_ = solver.get_elapsed_runtime() - stoptime
+                    solver.start += stoptime_
+                solution, solved, split_statistics = solver.solve_instance()
+
+                print_sudoku(solution)
+            except RunningTimeException as e:
+                print(f"!!! SKIPPED SUDOKU {problem_id} !!!")
+                print(e)
+                return (None, None, None)
+
+            # print_stats(split_statistics)
+            #dimacs = to_dimacs_str(solution)
+            return (split_statistics, problem_id, program_version)
+
+        except RestartException as e:
+
+            stoptime = solver.get_elapsed_runtime()
+
+            start = e.restart
+
+            if (start):
+                print(f"Restarted {problem_id}")
+                split_statistics = e.stats
+                runtime = e.runtime
+
+
+
+
+

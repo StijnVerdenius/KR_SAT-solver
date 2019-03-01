@@ -210,8 +210,6 @@ class CDCL_DPLL_Solver(Solver):
 
         else: # backtrack
 
-            # print("backtrack")
-
             # reset conflict mode
             self.backtrack_mode_active = False
 

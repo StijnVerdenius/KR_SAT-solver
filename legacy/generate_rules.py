@@ -4,10 +4,7 @@ import itertools
 
 
 
-order = 3
-
-expected_rule_count = 4 * order ** 4 * (1 + 4 * order ** 2)
-print("Expected number of rules without duplicate removal:", expected_rule_count)
+order = 4
 
 rules = set()
 
@@ -35,8 +32,6 @@ def generate_existential_rules(_1, _2, order):
                 for y in range(order):
                     loose.append(generate_literal(_1+x, _2+y, pos))
             exis_sq.append(loose)
-
-    print(exis_sq)
 
     return [exis_position, exis_colum, exis_row] + exis_sq
 

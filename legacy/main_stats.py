@@ -1,8 +1,7 @@
 import os
-from functools import partial
 
 from implementation.util.data_management import DataManager
-from implementation.util.stats import show_stats
+from legacy.stats import show_stats
 
 
 def add_version_number(item, vn):
