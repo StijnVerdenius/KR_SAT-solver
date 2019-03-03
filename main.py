@@ -129,7 +129,9 @@ def parse_arguments(arguments):
 
     program_version = int(option[2])
 
-    input_file = os.getcwd() + arguments[2]
+
+    dirname = os.path.dirname(__file__)
+    input_file = os.path.join(dirname, arguments[2])
 
     return program_version, input_file
 
