@@ -77,9 +77,9 @@ Every loop the algorithm chooses a next state, tries to simplify it and then doe
 The algorithm uses a form of bookeeping to know which literals are present in which clauses and a combination of ordered list and lookup dictionary to build the stack and do backtracking.
 In each individual node of the search tree there is a state of the type 'Knowledge Base' that holds the information about the still existing clauses, the already found literal allocation and the bookeeping. By efficient copying this state we can model each state of the search tree this way and backtrack quickly to previous decision nodes.
 
-In version two a dependency graph has been added to the Knowledge Base as well, holding information about which assignment led to the next. This way when an incosnsistency arises a problem clause can be added to the knowledge base and there can be backtracked accordingly to the right node.
+In version two a dependency graph has been added to the Knowledge Base as well, holding information about which assignment led to the next. This way when an inconsistency arises, a problem clause can be added to the knowledge base and there can be backtracked accordingly to the right node.
 
-Also in the third version more addition is done to the implementation. Namely, TODO: Max
+The third version of the solver adds the functionality of a Look-Ahead heuristic, this performs a Look-Ahead on the search tree at every step, and decides the most promising literal and assignment (at this step). Additionally the Look-Ahead step prunes the search tree by assigning forced literals. At every step a N number of literals are taken to look-Ahead on, defined by a pre-select heuristic. Furthermore a doubleLook can be performed on a look-Ahead if there is reason to do so. The Look-Ahead solver works with a depth first algorithm, and a stack based on generators, which contains any of the not-yet opened branches.  
 
 
 
