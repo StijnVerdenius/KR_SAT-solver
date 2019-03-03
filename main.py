@@ -120,7 +120,7 @@ def parse_arguments(arguments):
     :return:
     """
     number_of_arguments = len(arguments)
-    if (number_of_arguments < MIN_VERSION or number_of_arguments > MAX_ARGUMENTS):
+    if (number_of_arguments < MIN_ARGUMENTS or number_of_arguments > MAX_ARGUMENTS):
         raise Exception(f"You gave {number_of_arguments} arguments while it should be between {MIN_ARGUMENTS} - {MAX_ARGUMENTS}")
 
     option = arguments[1]
